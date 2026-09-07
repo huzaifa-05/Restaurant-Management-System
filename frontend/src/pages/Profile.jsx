@@ -44,7 +44,7 @@ export function Profile() {
   return (
     <section className="page-shell narrow">
       <div className="page-heading">
-        <p className="eyebrow">Mock role: {currentUser.role}</p>
+        <p className="eyebrow">Signed in as {currentUser.role}</p>
         <h1>Profile</h1>
       </div>
       <form className="checkout-form" onSubmit={submit}>

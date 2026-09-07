@@ -1,16 +1,18 @@
 import { orderApi } from "../api/orderApi";
 import { ErrorState } from "../components/ErrorState.jsx";
 import { LoadingState } from "../components/LoadingState.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 import { useAsync } from "../hooks/useAsync";
 import { formatCurrency } from "../utils/currency";
 
 export function OrderHistory() {
-  const { data, loading, error } = useAsync(() => orderApi.getUserOrders("user-1"), []);
+  const { currentUser } = useAuth();
+  const { data, loading, error } = useAsync(() => orderApi.getUserOrders(currentUser.id), [currentUser.id]);
 
   return (
     <section className="page-shell">
       <div className="page-heading">
-        <p className="eyebrow">User user-1</p>
+        <p className="eyebrow">User {currentUser.fullName}</p>
         <h1>Order History</h1>
       </div>
       {loading && <LoadingState label="Loading orders" />}

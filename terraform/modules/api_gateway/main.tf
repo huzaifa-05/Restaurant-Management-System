@@ -45,14 +45,21 @@ resource "aws_apigatewayv2_integration" "payment" {
 }
 
 locals {
-  ecs_routes = [
-    "ANY /api/users",
-    "ANY /api/users/{proxy+}",
-    "ANY /api/menu",
-    "ANY /api/menu/{proxy+}",
-    "ANY /api/orders",
-    "ANY /api/orders/{proxy+}"
-  ]
+  ecs_routes = {
+    "ANY /api/users" = true
+    "ANY /api/users/{proxy+}" = true
+    "ANY /api/menu" = false
+    "GET /api/menu/{proxy+}" = false
+    "GET /api/menu/items" = false
+    "GET /api/menu/items/{proxy+}" = false
+    "GET /api/menu/category/{proxy+}" = false
+    "ANY /api/orders" = true
+    "ANY /api/orders/{proxy+}" = true
+    "POST /api/menu/items" = true
+    "PUT /api/menu/items/{proxy+}" = true
+    "DELETE /api/menu/items/{proxy+}" = true
+    "PATCH /api/menu/items/{proxy+}" = true
+  }
 
   protected_payment_routes = [
     "POST /api/payments",
@@ -67,12 +74,12 @@ locals {
 }
 
 resource "aws_apigatewayv2_route" "ecs" {
-  for_each           = toset(local.ecs_routes)
+  for_each           = local.ecs_routes
   api_id             = aws_apigatewayv2_api.this.id
-  route_key          = each.value
+  route_key          = each.key
   target             = "integrations/${aws_apigatewayv2_integration.ecs.id}"
-  authorization_type = "JWT"
-  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
+  authorization_type = each.value ? "JWT" : "NONE"
+  authorizer_id      = each.value ? aws_apigatewayv2_authorizer.cognito.id : null
 }
 
 resource "aws_apigatewayv2_route" "payment_protected" {

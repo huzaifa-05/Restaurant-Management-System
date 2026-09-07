@@ -23,6 +23,23 @@ locals {
       OutputArtifactFormat = "CODEBUILD_CLONE_REF"
     }
   }
+
+  codebuild_project_names = {
+    terraform_validate = "${var.name_prefix}-terraform-validate"
+    terraform_plan     = "${var.name_prefix}-terraform-plan"
+    terraform_apply    = "${var.name_prefix}-terraform-apply"
+    frontend           = "${var.name_prefix}-frontend"
+    backend_ecs        = "${var.name_prefix}-backend-ecs"
+    payment_lambda     = "${var.name_prefix}-payment-lambda"
+  }
+}
+
+module "codebuild_log_groups" {
+  source = "../cicd_log_groups"
+
+  project_names     = local.codebuild_project_names
+  retention_in_days = var.log_retention_days
+  tags              = var.tags
 }
 
 resource "aws_codebuild_project" "terraform_validate" {
@@ -42,6 +59,13 @@ resource "aws_codebuild_project" "terraform_validate" {
     environment_variable {
       name  = "TF_WORKING_DIR"
       value = var.terraform_working_directory
+    }
+  }
+
+  logs_config {
+    cloudwatch_logs {
+      group_name = module.codebuild_log_groups.log_group_names["terraform_validate"]
+      status     = "ENABLED"
     }
   }
 }
@@ -65,6 +89,13 @@ resource "aws_codebuild_project" "terraform_plan" {
       value = var.terraform_working_directory
     }
   }
+
+  logs_config {
+    cloudwatch_logs {
+      group_name = module.codebuild_log_groups.log_group_names["terraform_plan"]
+      status     = "ENABLED"
+    }
+  }
 }
 
 resource "aws_codebuild_project" "terraform_apply" {
@@ -84,6 +115,13 @@ resource "aws_codebuild_project" "terraform_apply" {
     environment_variable {
       name  = "TF_WORKING_DIR"
       value = var.terraform_working_directory
+    }
+  }
+
+  logs_config {
+    cloudwatch_logs {
+      group_name = module.codebuild_log_groups.log_group_names["terraform_apply"]
+      status     = "ENABLED"
     }
   }
 }
@@ -113,6 +151,13 @@ resource "aws_codebuild_project" "frontend" {
     environment_variable {
       name  = "VITE_API_BASE_URL"
       value = "https://${var.cloudfront_domain_name}"
+    }
+  }
+
+  logs_config {
+    cloudwatch_logs {
+      group_name = module.codebuild_log_groups.log_group_names["frontend"]
+      status     = "ENABLED"
     }
   }
 }
@@ -163,6 +208,13 @@ resource "aws_codebuild_project" "backend_ecs" {
       value = var.ecr_repository_urls.order
     }
   }
+
+  logs_config {
+    cloudwatch_logs {
+      group_name = module.codebuild_log_groups.log_group_names["backend_ecs"]
+      status     = "ENABLED"
+    }
+  }
 }
 
 resource "aws_codebuild_project" "payment_lambda" {
@@ -182,6 +234,13 @@ resource "aws_codebuild_project" "payment_lambda" {
     environment_variable {
       name  = "PAYMENT_LAMBDA_NAME"
       value = var.payment_lambda_name
+    }
+  }
+
+  logs_config {
+    cloudwatch_logs {
+      group_name = module.codebuild_log_groups.log_group_names["payment_lambda"]
+      status     = "ENABLED"
     }
   }
 }
@@ -299,6 +358,7 @@ resource "aws_codepipeline" "application" {
         file_paths {
           includes = [
             "frontend/**",
+            "buildspec/**",
             "services/user-service/**",
             "services/menu-service/**",
             "services/order-service/**",
@@ -347,18 +407,17 @@ resource "aws_codepipeline" "application" {
       owner           = "AWS"
       provider        = "CodeBuild"
       version         = "1"
+      run_order       = 1
       input_artifacts = ["SourceOutput"]
       configuration   = { ProjectName = aws_codebuild_project.backend_ecs.name }
     }
-  }
-  stage {
-    name = "BuildDeployPaymentLambda"
     action {
       name            = "BuildDeployPaymentLambda"
       category        = "Build"
       owner           = "AWS"
       provider        = "CodeBuild"
       version         = "1"
+      run_order       = 2
       input_artifacts = ["SourceOutput"]
       configuration   = { ProjectName = aws_codebuild_project.payment_lambda.name }
     }

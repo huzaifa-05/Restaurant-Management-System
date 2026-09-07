@@ -1,20 +1,38 @@
-import { createContext, useContext, useMemo } from "react";
-import { mockCurrentUser } from "../config/mockAuth";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { mockGuestUser, readStoredUser, storeUserSession } from "../config/mockAuth";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
+  const [currentUser, setCurrentUser] = useState(() => readStoredUser());
+
+  useEffect(() => {
+    storeUserSession(currentUser);
+  }, [currentUser]);
+
   const value = useMemo(
     () => ({
-      currentUser: mockCurrentUser,
+      currentUser,
+      isAuthenticated: Boolean(currentUser),
+      signIn(user) {
+        setCurrentUser({
+          id: user.id || mockGuestUser.id,
+          fullName: user.fullName,
+          email: user.email,
+          role: (user.role || "USER").toUpperCase()
+        });
+      },
+      signOut() {
+        setCurrentUser(null);
+      },
       hasRole(role) {
-        return mockCurrentUser.role === role;
+        return currentUser?.role === role;
       },
       isAdmin() {
-        return mockCurrentUser.role === "ADMIN";
+        return currentUser?.role === "ADMIN";
       }
     }),
-    []
+    [currentUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

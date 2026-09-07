@@ -1,11 +1,13 @@
 import { Link } from "react-router-dom";
 import { Trash2 } from "lucide-react";
 import { QuantityControl } from "../components/QuantityControl.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { formatCurrency } from "../utils/currency";
 
 export function Cart() {
   const { items, subtotal, total, increase, decrease, removeItem } = useCart();
+  const { isAuthenticated } = useAuth();
 
   return (
     <section className="page-shell narrow">
@@ -49,7 +51,7 @@ export function Cart() {
               <span>Total</span>
               <strong>{formatCurrency(total)}</strong>
             </div>
-            <Link className="primary-button full" to="/checkout">
+            <Link className="primary-button full" to={isAuthenticated ? "/checkout" : "/login?next=/checkout"}>
               Checkout
             </Link>
           </aside>

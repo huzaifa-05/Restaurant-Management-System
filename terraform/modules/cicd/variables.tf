@@ -93,6 +93,11 @@ variable "payment_lambda_name" {
   type        = string
 }
 
+variable "log_retention_days" {
+  description = "CloudWatch Logs retention period for CodeBuild log groups."
+  type        = number
+}
+
 variable "terraform_working_directory" {
   description = "Repository-relative Terraform working directory used by Terraform CodeBuild projects."
   type        = string

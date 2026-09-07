@@ -13,6 +13,8 @@ import { AdminDashboard } from "../pages/AdminDashboard.jsx";
 import { AdminMenuManagement } from "../pages/AdminMenuManagement.jsx";
 import { AdminOrderManagement } from "../pages/AdminOrderManagement.jsx";
 import { Unauthorized } from "../pages/Unauthorized.jsx";
+import { Login } from "../pages/Login.jsx";
+import { RequireCustomerRoute } from "../components/RequireCustomerRoute.jsx";
 import { ProtectedAdminRoute } from "../components/ProtectedAdminRoute.jsx";
 
 export function AppRoutes() {
@@ -24,10 +26,13 @@ export function AppRoutes() {
         <Route path="/menu/category/:category" element={<MenuCategory />} />
         <Route path="/menu/items/:id" element={<ItemDetails />} />
         <Route path="/cart" element={<Cart />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/confirmation" element={<OrderConfirmation />} />
-        <Route path="/orders" element={<OrderHistory />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route path="/login" element={<Login />} />
+        <Route element={<RequireCustomerRoute />}>
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/confirmation" element={<OrderConfirmation />} />
+          <Route path="/orders" element={<OrderHistory />} />
+          <Route path="/profile" element={<Profile />} />
+        </Route>
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route element={<ProtectedAdminRoute />}>
           <Route path="/admin" element={<AdminDashboard />} />

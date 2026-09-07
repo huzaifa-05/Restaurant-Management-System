@@ -183,6 +183,7 @@ module "cicd" {
   order_ecs_service_name       = module.ecs.order_ecs_service_name
   ecr_repository_urls          = module.ecr.repository_urls
   payment_lambda_name          = module.lambda.payment_lambda_name
+  log_retention_days           = var.log_retention_days
   terraform_working_directory  = "terraform/environments/dev"
   tags                         = local.common_tags
 }

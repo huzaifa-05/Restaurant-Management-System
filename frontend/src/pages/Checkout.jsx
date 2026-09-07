@@ -2,12 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CreditCard } from "lucide-react";
 import { useCart } from "../context/CartContext.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 import { checkout } from "../services/checkoutService";
 import { formatCurrency } from "../utils/currency";
 
 export function Checkout() {
   const navigate = useNavigate();
   const { items, total, clearCart } = useCart();
+  const { currentUser } = useAuth();
   const [form, setForm] = useState({
     orderType: "TAKEAWAY",
     pickupTime: "",
@@ -32,7 +34,7 @@ export function Checkout() {
     try {
       const result = await checkout({
         cartItems: items,
-        userId: "user-1",
+        userId: currentUser.id,
         ...form
       });
       clearCart();

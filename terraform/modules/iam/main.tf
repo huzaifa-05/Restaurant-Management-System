@@ -133,6 +133,7 @@ resource "aws_iam_role_policy" "frontend_codebuild" {
   policy = templatefile("${path.module}/templates/iam_policy/frontend_codebuild.tftpl", {
     cloudfront_distribution_arn = var.cloudfront_distribution_arn
     codeconnection_arn          = var.codeconnection_arn
+    artifact_bucket_resources   = jsonencode(local.artifact_bucket_resources)
     frontend_bucket_arn         = var.frontend_bucket_arn
     log_resources               = jsonencode(local.codebuild_log_resources)
   })
@@ -149,10 +150,11 @@ resource "aws_iam_role_policy" "backend_codebuild" {
   role = aws_iam_role.backend_codebuild.id
 
   policy = templatefile("${path.module}/templates/iam_policy/backend_codebuild.tftpl", {
-    codeconnection_arn  = var.codeconnection_arn
-    ecr_repository_arns = jsonencode(var.ecr_repository_arns)
-    log_resources       = jsonencode(local.codebuild_log_resources)
-    pass_role_arns      = jsonencode(local.backend_ecs_pass_role_arns)
+    artifact_bucket_resources = jsonencode(local.artifact_bucket_resources)
+    codeconnection_arn        = var.codeconnection_arn
+    ecr_repository_arns       = jsonencode(var.ecr_repository_arns)
+    log_resources             = jsonencode(local.codebuild_log_resources)
+    pass_role_arns            = jsonencode(local.backend_ecs_pass_role_arns)
   })
 }
 
@@ -167,9 +169,10 @@ resource "aws_iam_role_policy" "payment_codebuild" {
   role = aws_iam_role.payment_codebuild.id
 
   policy = templatefile("${path.module}/templates/iam_policy/payment_codebuild.tftpl", {
-    artifact_bucket_arn = var.artifact_bucket_arn
-    codeconnection_arn  = var.codeconnection_arn
-    log_resources       = jsonencode(local.codebuild_log_resources)
-    payment_lambda_arn  = local.payment_lambda_arn
+    artifact_bucket_arn       = var.artifact_bucket_arn
+    artifact_bucket_resources = jsonencode(local.artifact_bucket_resources)
+    codeconnection_arn        = var.codeconnection_arn
+    log_resources             = jsonencode(local.codebuild_log_resources)
+    payment_lambda_arn        = local.payment_lambda_arn
   })
 }

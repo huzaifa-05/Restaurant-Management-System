@@ -1,11 +1,11 @@
 import { Link, NavLink } from "react-router-dom";
-import { ClipboardList, ShoppingCart, UserRound, Utensils } from "lucide-react";
+import { ClipboardList, LogIn, LogOut, ShoppingCart, UserRound, Utensils } from "lucide-react";
 import { useCart } from "../context/CartContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
 export function Navbar() {
   const { count } = useCart();
-  const { isAdmin } = useAuth();
+  const { currentUser, isAdmin, signOut, isAuthenticated } = useAuth();
 
   return (
     <header className="site-header">
@@ -29,12 +29,29 @@ export function Navbar() {
           <ShoppingCart size={20} />
           {count > 0 && <span>{count}</span>}
         </Link>
-        <Link className="icon-link" to="/profile" title="Profile">
-          <UserRound size={20} />
-        </Link>
+        {isAuthenticated ? (
+          <Link className="icon-link" to="/profile" title={currentUser?.fullName || "Profile"}>
+            <UserRound size={20} />
+          </Link>
+        ) : (
+          <Link className="icon-link" to="/login?next=/checkout" title="Sign in">
+            <LogIn size={20} />
+          </Link>
+        )}
+        {isAuthenticated ? (
+          <button className="primary-small" onClick={signOut} type="button" title="Sign out">
+            <LogOut size={18} />
+            Sign out
+          </button>
+        ) : (
+          <Link className="primary-small" to="/login?next=/checkout">
+            <Utensils size={18} />
+            Order
+          </Link>
+        )}
         <Link className="primary-small" to="/menu">
           <Utensils size={18} />
-          Order
+          Menu
         </Link>
       </div>
     </header>

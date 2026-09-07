@@ -4,6 +4,7 @@ import { menuApi } from "../api/menuApi";
 import { MenuCard } from "../components/MenuCard.jsx";
 import { LoadingState } from "../components/LoadingState.jsx";
 import { ErrorState } from "../components/ErrorState.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 import { useAsync } from "../hooks/useAsync";
 
 const sections = [
@@ -14,6 +15,7 @@ const sections = [
 ];
 
 export function Home() {
+  const { isAuthenticated } = useAuth();
   const { data, loading, error } = useAsync(menuApi.getItems, []);
   const items = data || [];
 
@@ -29,7 +31,7 @@ export function Home() {
               <ShoppingBag size={20} />
               Explore Menu
             </Link>
-            <Link className="secondary-button light" to="/checkout">
+            <Link className="secondary-button light" to={isAuthenticated ? "/checkout" : "/login?next=/checkout"}>
               Order Now
               <ArrowRight size={20} />
             </Link>

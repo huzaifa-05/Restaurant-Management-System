@@ -43,14 +43,14 @@ variable "payment_lambda_name" {
   type        = string
 }
 
-variable "ecr_repository_arns" {
-  description = "ARNs of the ECR repositories used by backend ECS image builds."
-  type        = list(string)
-}
-
 variable "artifact_bucket_arn" {
   description = "ARN of the CI/CD artifact S3 bucket."
   type        = string
+}
+
+variable "ecr_repository_arns" {
+  description = "ARNs of the ECR repositories used by backend ECS image builds."
+  type        = list(string)
 }
 
 variable "codeconnection_arn" {
