@@ -10,11 +10,14 @@ export function Checkout() {
   const navigate = useNavigate();
   const { items, total, clearCart } = useCart();
   const { currentUser } = useAuth();
+  const isStaffOrder = currentUser.role === "STAFF" || currentUser.role === "ADMIN";
   const [form, setForm] = useState({
     orderType: "TAKEAWAY",
     pickupTime: "",
     notes: "",
-    paymentMethod: "CARD"
+    paymentMethod: "CARD",
+    customerName: "",
+    tableNumber: ""
   });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -34,9 +37,15 @@ export function Checkout() {
     try {
       const result = await checkout({
         cartItems: items,
-        userId: currentUser.id,
+        orderSource: isStaffOrder ? "STAFF" : "SELF_SERVICE",
+        customerName: form.customerName,
+        tableNumber: form.tableNumber,
         ...form
       });
+      if (result.payment.status !== "SUCCESS") {
+        setError("Payment failed. Your order was saved as payment failed.");
+        return;
+      }
       clearCart();
       navigate("/confirmation", { state: result });
     } catch (err) {
@@ -78,6 +87,18 @@ export function Checkout() {
           Notes
           <textarea name="notes" rows="4" value={form.notes} onChange={updateField} />
         </label>
+        {isStaffOrder && (
+          <>
+            <label>
+              Customer name
+              <input name="customerName" value={form.customerName} onChange={updateField} />
+            </label>
+            <label>
+              Table number
+              <input name="tableNumber" value={form.tableNumber} onChange={updateField} />
+            </label>
+          </>
+        )}
         <div className="summary-line total">
           <span>Total</span>
           <strong>{formatCurrency(total)}</strong>

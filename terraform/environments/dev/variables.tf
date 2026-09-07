@@ -105,3 +105,9 @@ variable "github_branch" {
   type        = string
   default     = "main"
 }
+
+variable "service_internal_token" {
+  description = "Shared token used for internal service-to-service order updates."
+  type        = string
+  default     = "foodie-we-internal"
+}

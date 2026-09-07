@@ -179,6 +179,11 @@ const items = [
   }
 ];
 
+items.forEach((item) => {
+  if (!item.updatedAt) item.updatedAt = item.createdAt;
+  if (!item.imageUrl) item.imageUrl = item.image;
+});
+
 class MenuRepository {
   async findAll() {
     return [...items];

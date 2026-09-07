@@ -10,19 +10,19 @@ class UserService {
     return user;
   }
 
-  async getCurrentUser(cognitoSub) {
-    const user = await repository.findByCognitoSub(cognitoSub);
+  async getCurrentUser(identifier) {
+    const user = await repository.findCurrent(identifier);
     if (!user) throw new AppError("Current user not found", 404);
     return user;
   }
 
-  async updateCurrentUser(cognitoSub, payload) {
+  async updateCurrentUser(identifier, payload) {
     const updates = {};
     ["fullName", "email", "phone"].forEach((field) => {
       if (payload[field] !== undefined) updates[field] = payload[field];
     });
 
-    const user = await repository.updateByCognitoSub(cognitoSub, updates);
+    const user = await repository.updateCurrent(identifier, updates);
     if (!user) throw new AppError("Current user not found", 404);
     return user;
   }

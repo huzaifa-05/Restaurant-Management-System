@@ -4,7 +4,7 @@ export const mockGuestUser = {
   id: import.meta.env.VITE_MOCK_USER_ID || "user-1",
   fullName: import.meta.env.VITE_MOCK_USER_NAME || "Foodie WE Guest",
   email: import.meta.env.VITE_MOCK_USER_EMAIL || "guest@foodie-we.local",
-  role: (import.meta.env.VITE_MOCK_USER_ROLE || "USER").toUpperCase()
+  role: (import.meta.env.VITE_MOCK_USER_ROLE || "CUSTOMER").toUpperCase()
 };
 
 export function readStoredUser() {
@@ -29,9 +29,17 @@ export function storeUserSession(user) {
 }
 
 export function getMockAuthHeaders() {
-  const currentUser = readStoredUser() || mockGuestUser;
+  const currentUser = readStoredUser();
+
+  if (!currentUser) {
+    return {};
+  }
+
   return {
+    "x-mock-authenticated": "true",
     "x-mock-user-id": currentUser.id,
-    "x-mock-user-role": currentUser.role
+    "x-mock-user-role": (currentUser.role || "CUSTOMER").toUpperCase(),
+    "x-mock-user-email": currentUser.email || "",
+    "x-mock-user-name": currentUser.fullName || ""
   };
 }

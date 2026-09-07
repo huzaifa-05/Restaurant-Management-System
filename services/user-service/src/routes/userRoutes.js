@@ -4,6 +4,6 @@ const { mockAuth } = require("../middleware/mockAuth");
 
 router.get("/me", mockAuth, controller.getMe);
 router.put("/me", mockAuth, controller.updateMe);
-router.get("/:id", controller.getUser);
+router.get("/:id", mockAuth, controller.getUser);
 
 module.exports = router;

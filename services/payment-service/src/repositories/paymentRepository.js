@@ -14,6 +14,10 @@ class PaymentRepository {
     return payments.filter((payment) => payment.orderId === orderId);
   }
 
+  async findSuccessfulByOrder(orderId) {
+    return payments.find((payment) => payment.orderId === orderId && payment.status === "SUCCESS") || null;
+  }
+
   async update(paymentId, updates) {
     const payment = await this.findById(paymentId);
     if (!payment) return null;

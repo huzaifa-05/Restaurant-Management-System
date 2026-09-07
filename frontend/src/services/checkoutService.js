@@ -1,9 +1,20 @@
 import { orderApi } from "../api/orderApi";
 import { paymentApi } from "../api/paymentApi";
 
-export async function checkout({ cartItems, orderType, pickupTime, notes, paymentMethod, userId }) {
+export async function checkout({
+  cartItems,
+  orderType,
+  pickupTime,
+  notes,
+  paymentMethod,
+  orderSource,
+  customerName,
+  tableNumber
+}) {
   const order = await orderApi.createOrder({
-    userId,
+    orderSource,
+    customerName,
+    tableNumber,
     orderType,
     pickupTime,
     notes,

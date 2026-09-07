@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 
 export function Navbar() {
   const { count } = useCart();
-  const { currentUser, isAdmin, signOut, isAuthenticated } = useAuth();
+  const { currentUser, isAdmin, isStaff, signOut, isAuthenticated } = useAuth();
 
   return (
     <header className="site-header">
@@ -20,7 +20,7 @@ export function Navbar() {
         {isAdmin() && <NavLink to="/admin">Admin</NavLink>}
       </nav>
       <div className="nav-actions">
-        {isAdmin() && (
+        {(isAdmin() || isStaff()) && (
           <Link className="icon-link" to="/admin/orders" title="Admin orders">
             <ClipboardList size={20} />
           </Link>

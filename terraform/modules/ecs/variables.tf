@@ -78,6 +78,11 @@ variable "cognito_user_pool_client_id" {
   type        = string
 }
 
+variable "internal_service_token" {
+  description = "Shared internal token used by backend services for service-to-service requests."
+  type        = string
+}
+
 variable "desired_count" {
   description = "Desired number of tasks for each ECS service."
   type        = number

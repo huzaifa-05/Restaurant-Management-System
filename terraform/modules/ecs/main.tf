@@ -42,11 +42,12 @@ locals {
       task_role = var.order_task_role_arn
       env = {
         PORT                  = "5003"
-        ORDERS_TABLE_NAME     = var.orders_table_name
-        MENU_SERVICE_URL      = "http://menu:5002"
-        COGNITO_USER_POOL_ID  = var.cognito_user_pool_id
-        COGNITO_APP_CLIENT_ID = var.cognito_user_pool_client_id
-        NODE_ENV              = "production"
+        ORDERS_TABLE_NAME      = var.orders_table_name
+        MENU_SERVICE_URL       = "http://menu:5002"
+        INTERNAL_SERVICE_TOKEN = var.internal_service_token
+        COGNITO_USER_POOL_ID   = var.cognito_user_pool_id
+        COGNITO_APP_CLIENT_ID  = var.cognito_user_pool_client_id
+        NODE_ENV               = "production"
       }
     }
   }

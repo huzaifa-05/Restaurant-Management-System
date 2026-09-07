@@ -1,6 +1,12 @@
 const { error } = require("../utils/apiResponse");
 const { config } = require("../config");
 
+function normalizeRole(role) {
+  const value = String(role || "").toUpperCase();
+  if (!value || value === "USER") return "CUSTOMER";
+  return value;
+}
+
 function parseGroups(value) {
   if (!value) return [];
   return String(value)
@@ -33,20 +39,27 @@ function resolveGatewayUser(req) {
   const userId = req.headers["x-user-id"] || claims.sub;
   if (!userId) return null;
   const groups = parseGroups(req.headers["x-user-groups"] || claims["cognito:groups"]);
+  const role = normalizeRole(
+    req.headers["x-user-role"] ||
+      (groups.some((group) => ["ADMINS", "ADMIN"].includes(group.toUpperCase())) ? "ADMIN" :
+        groups.some((group) => ["STAFF", "STAFFS"].includes(group.toUpperCase())) ? "STAFF" : "CUSTOMER")
+  );
   return {
     id: userId,
     email: req.headers["x-user-email"] || claims.email || "",
     groups,
-    role: groups.includes("Admins") || groups.includes("ADMIN") ? "ADMIN" : "USER"
+    role
   };
 }
 
 function resolveMockUser(req) {
-  if (String(req.headers["x-mock-authenticated"]).toLowerCase() === "false") return null;
+  if (String(req.headers["x-mock-authenticated"]).toLowerCase() !== "true") return null;
 
   return {
     id: req.headers["x-mock-user-id"] || process.env.MOCK_USER_ID || "user-1",
-    role: String(req.headers["x-mock-user-role"] || process.env.MOCK_USER_ROLE || "USER").toUpperCase()
+    email: req.headers["x-mock-user-email"] || "",
+    fullName: req.headers["x-mock-user-name"] || "",
+    role: normalizeRole(req.headers["x-mock-user-role"] || process.env.MOCK_USER_ROLE || "CUSTOMER")
   };
 }
 
@@ -62,13 +75,15 @@ function requireAuth(req, res, next) {
   return next();
 }
 
-function requireAdmin(req, res, next) {
+function requireStaffOrAdmin(req, res, next) {
   requireAuth(req, res, () => {
-    if (req.user.role !== "ADMIN") {
-      return error(res, "Admin access required", 403);
+    if (!["STAFF", "ADMIN"].includes(req.user.role)) {
+      return error(res, "Staff access required", 403);
     }
     return next();
   });
 }
 
-module.exports = { requireAuth, requireAdmin, resolveCurrentUser };
+const requireAdmin = requireStaffOrAdmin;
+
+module.exports = { requireAuth, requireAdmin, requireStaffOrAdmin, resolveCurrentUser };

@@ -5,7 +5,13 @@ import { LoadingState } from "../components/LoadingState.jsx";
 import { useAsync } from "../hooks/useAsync";
 import { formatCurrency } from "../utils/currency";
 
-const statuses = ["PENDING", "CONFIRMED", "PREPARING", "READY", "COMPLETED", "CANCELLED"];
+const statuses = [
+  "CONFIRMED",
+  "PREPARING",
+  "READY",
+  "COMPLETED",
+  "CANCELLED"
+];
 
 export function AdminOrderManagement() {
   const { data, loading, error, reload } = useAsync(orderApi.listOrders, []);
@@ -39,17 +45,28 @@ export function AdminOrderManagement() {
                 <p>
                   {order.orderType} · {new Date(order.createdAt).toLocaleString()}
                 </p>
+                <p>
+                  {order.orderSource} · payment {order.paymentStatus}
+                </p>
                 <ul>
                   {order.items.map((item) => (
                     <li key={item.itemId}>
-                      {item.quantity} x {item.itemName}
+                      {item.quantity} x {item.name || item.itemName}
                     </li>
                   ))}
                 </ul>
               </div>
               <div className="admin-order-side">
                 <strong>{formatCurrency(order.totalAmount)}</strong>
-                <select value={order.status} onChange={(event) => updateStatus(order.orderId, event.target.value)}>
+                <select
+                  value={statuses.includes(order.status) ? order.status : ""}
+                  onChange={(event) => updateStatus(order.orderId, event.target.value)}
+                >
+                  {!statuses.includes(order.status) && (
+                    <option value="" disabled>
+                      {order.status}
+                    </option>
+                  )}
                   {statuses.map((status) => (
                     <option key={status} value={status}>
                       {status}

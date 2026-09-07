@@ -15,7 +15,9 @@ class OrderRepository {
   }
 
   async findByUser(userId) {
-    return orders.filter((order) => order.userId === userId).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    return orders
+      .filter((order) => order.customerUserId === userId || order.userId === userId)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
 
   async update(orderId, updates) {

@@ -55,6 +55,7 @@ locals {
     "GET /api/menu/category/{proxy+}" = false
     "ANY /api/orders" = true
     "ANY /api/orders/{proxy+}" = true
+    "ANY /api/orders/internal/{proxy+}" = false
     "POST /api/menu/items" = true
     "PUT /api/menu/items/{proxy+}" = true
     "DELETE /api/menu/items/{proxy+}" = true

@@ -5,13 +5,15 @@ const { AppError } = require("../utils/AppError");
 const service = new OrderService();
 
 function ensureOrderAccess(req, order) {
-  if (req.user.role === "ADMIN" || order.userId === req.user.id) return;
+  if (req.user.role === "ADMIN" || req.user.role === "STAFF") return;
+  if (order.customerUserId && order.customerUserId === req.user.id) return;
+  if (order.userId && order.userId === req.user.id) return;
   throw new AppError("Order access denied", 403);
 }
 
 async function createOrder(req, res, next) {
   try {
-    success(res, await service.createOrder({ ...req.body, userId: req.user.id }), 201);
+    success(res, await service.createOrder({ actor: req.user, payload: req.body }), 201);
   } catch (err) {
     next(err);
   }
@@ -35,9 +37,17 @@ async function getOrder(req, res, next) {
   }
 }
 
+async function getInternalOrder(req, res, next) {
+  try {
+    success(res, await service.getOrder(req.params.id));
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function getUserOrders(req, res, next) {
   try {
-    if (req.user.role !== "ADMIN" && req.params.userId !== req.user.id) {
+    if (req.user.role !== "ADMIN" && req.user.role !== "STAFF" && req.params.userId !== req.user.id) {
       throw new AppError("Order access denied", 403);
     }
     success(res, await service.getUserOrders(req.params.userId));
@@ -54,6 +64,24 @@ async function updateStatus(req, res, next) {
   }
 }
 
+async function updatePaymentStatus(req, res, next) {
+  try {
+    const order = await service.getOrder(req.params.id);
+    ensureOrderAccess(req, order);
+    success(res, await service.updatePaymentStatus(req.params.id, req.body.paymentStatus));
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function updateInternalPaymentStatus(req, res, next) {
+  try {
+    success(res, await service.updatePaymentStatus(req.params.id, req.body.paymentStatus));
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function cancelOrder(req, res, next) {
   try {
     const order = await service.getOrder(req.params.id);
@@ -64,4 +92,14 @@ async function cancelOrder(req, res, next) {
   }
 }
 
-module.exports = { createOrder, listOrders, getOrder, getUserOrders, updateStatus, cancelOrder };
+module.exports = {
+  createOrder,
+  listOrders,
+  getOrder,
+  getInternalOrder,
+  getUserOrders,
+  updateStatus,
+  updatePaymentStatus,
+  updateInternalPaymentStatus,
+  cancelOrder
+};

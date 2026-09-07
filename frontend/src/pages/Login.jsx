@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { LogIn } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { mockGuestUser } from "../config/mockAuth";
 import { useAuth } from "../context/AuthContext.jsx";
 
 function getNextPath(search) {
@@ -26,10 +27,10 @@ export function Login() {
     event.preventDefault();
     const next = getNextPath(location.search);
     signIn({
-      id: form.email.trim().toLowerCase() || undefined,
+      id: mockGuestUser.id,
       fullName: form.fullName.trim() || "Foodie WE Customer",
       email: form.email.trim() || "customer@foodie-we.local",
-      role: "USER"
+      role: mockGuestUser.role
     });
     navigate(next, { replace: true });
   }

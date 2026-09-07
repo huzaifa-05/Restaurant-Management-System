@@ -19,7 +19,7 @@ export function AuthProvider({ children }) {
           id: user.id || mockGuestUser.id,
           fullName: user.fullName,
           email: user.email,
-          role: (user.role || "USER").toUpperCase()
+          role: (user.role || "CUSTOMER").toUpperCase()
         });
       },
       signOut() {
@@ -30,6 +30,9 @@ export function AuthProvider({ children }) {
       },
       isAdmin() {
         return currentUser?.role === "ADMIN";
+      },
+      isStaff() {
+        return currentUser?.role === "STAFF";
       }
     }),
     [currentUser]

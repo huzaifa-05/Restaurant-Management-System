@@ -154,6 +154,7 @@ module "ecs" {
   orders_table_name           = module.dynamodb.orders_table_name
   cognito_user_pool_id        = module.cognito.user_pool_id
   cognito_user_pool_client_id = module.cognito.user_pool_client_id
+  internal_service_token      = var.service_internal_token
   desired_count               = var.desired_count
   cpu                         = var.ecs_cpu
   memory                      = var.ecs_memory
