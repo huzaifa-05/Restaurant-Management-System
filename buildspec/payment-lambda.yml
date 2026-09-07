@@ -1,0 +1,16 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - cd services/payment-service
+      - npm ci
+  build:
+    commands:
+      - node -e "const { handler } = require('./handler'); handler({ rawPath:'/api/payments/webhook', requestContext:{ http:{ method:'POST' } }, body: JSON.stringify({ type:'build.check' }) }).then(r => { if (r.statusCode !== 200) process.exit(1); })"
+      - zip -r payment-service.zip . -x "node_modules/.cache/*"
+  post_build:
+    commands:
+      - aws lambda update-function-code --function-name "$PAYMENT_LAMBDA_NAME" --zip-file fileb://payment-service.zip

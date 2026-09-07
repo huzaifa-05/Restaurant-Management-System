@@ -1,0 +1,12 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - terraform version
+  build:
+    commands:
+      - terraform fmt -check -recursive
+      - cd "$TF_WORKING_DIR"
+      - terraform init
+      - terraform validate

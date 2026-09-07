@@ -1,0 +1,34 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "UseConnection",
+      "Effect": "Allow",
+      "Action": [
+        "codestar-connections:UseConnection",
+        "codeconnections:UseConnection"
+      ],
+      "Resource": "${codeconnection_arn}"
+    },
+    {
+      "Sid": "StartBuilds",
+      "Effect": "Allow",
+      "Action": [
+        "codebuild:BatchGetBuilds",
+        "codebuild:StartBuild"
+      ],
+      "Resource": ${codebuild_project_arns}
+    },
+    {
+      "Sid": "Artifacts",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:GetObjectVersion",
+        "s3:PutObject",
+        "s3:GetBucketVersioning"
+      ],
+      "Resource": ${artifact_bucket_resources}
+    }
+  ]
+}

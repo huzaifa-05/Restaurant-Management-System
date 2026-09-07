@@ -1,0 +1,6 @@
+aws_region   = "us-west-2"
+project_name = "foodie-we"
+owner        = "Huzaifa"
+
+# Leave null to create: foodie-we-terraform-state-<aws-account-id>
+state_bucket_name = null

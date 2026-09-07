@@ -1,0 +1,14 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - terraform fmt -check -recursive
+      - cd "$TF_WORKING_DIR"
+      - terraform init
+      - terraform plan -out=tfplan
+artifacts:
+  base-directory: "$TF_WORKING_DIR"
+  files:
+    - tfplan
+    - .terraform.lock.hcl

@@ -1,0 +1,27 @@
+# General
+aws_region   = "us-west-2"
+environment  = "dev"
+project_name = "foodie-we"
+
+# Networking
+vpc_cidr              = "10.42.0.0/16"
+public_subnet_a_cidr  = "10.42.1.0/24"
+private_subnet_a_cidr = "10.42.11.0/24"
+public_subnet_b_cidr  = "10.42.2.0/24"
+private_subnet_b_cidr = "10.42.12.0/24"
+
+# ECS
+desired_count       = 1
+ecs_cpu             = 256
+ecs_memory          = 512
+bootstrap_image_tag = "v1"
+
+# GitHub / CI-CD
+github_connection_arn     = "arn:aws:codeconnections:us-west-2:395063533284:connection/a69b0212-a1c5-4916-bf71-0df4812ccc96"
+github_full_repository_id = "awabamjad1/internship-program-2026"
+github_branch             = "Restaurant-Management-System"
+
+# Payment / Lambda
+payment_success_rate   = "0.9"
+lambda_timeout_seconds = 30
+log_retention_days     = 14

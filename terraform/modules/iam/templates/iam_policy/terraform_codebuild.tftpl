@@ -1,0 +1,41 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "WriteBuildLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": ${log_resources}
+    },
+    {
+      "Sid": "UseSourceConnection",
+      "Effect": "Allow",
+      "Action": [
+        "codestar-connections:UseConnection",
+        "codeconnections:UseConnection"
+      ],
+      "Resource": "${codeconnection_arn}"
+    },
+    {
+      "Sid": "TerraformStateArtifacts",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:ListBucket",
+        "s3:GetBucketLocation"
+      ],
+      "Resource": ${artifact_bucket_resources}
+    },
+    {
+      "Sid": "ManageProjectInfrastructure",
+      "Effect": "Allow",
+      "Action": ${infrastructure_actions},
+      "Resource": "*"
+    }
+  ]
+}

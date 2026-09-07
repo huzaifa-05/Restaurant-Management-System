@@ -1,0 +1,9 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - if [ -n "$CODEBUILD_SRC_DIR_PlanOutput" ] && [ -f "$CODEBUILD_SRC_DIR_PlanOutput/tfplan" ]; then cp "$CODEBUILD_SRC_DIR_PlanOutput/tfplan" "$TF_WORKING_DIR/tfplan"; fi
+      - cd "$TF_WORKING_DIR"
+      - terraform init
+      - terraform apply -auto-approve tfplan
