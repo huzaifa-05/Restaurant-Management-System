@@ -3,7 +3,7 @@ version: 0.2
 phases:
   pre_build:
     commands:
-      - ROOT_DIR="${CODEBUILD_SRC_DIR:-$PWD}"
+      - 'ROOT_DIR="${CODEBUILD_SRC_DIR:-$PWD}"'
       - |
         if [ ! -d "$ROOT_DIR/.git" ]; then
           echo "Payment Lambda builds require CodePipeline SourceOutput to use CODEBUILD_CLONE_REF so CodeBuild receives a full Git clone."
