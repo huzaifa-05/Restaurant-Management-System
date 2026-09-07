@@ -111,3 +111,15 @@ variable "service_internal_token" {
   type        = string
   default     = "foodie-we-internal"
 }
+
+variable "route53_zone_name" {
+  description = "Public Route 53 hosted zone used for the Foodie WE custom domain."
+  type        = string
+  default     = "internship.cloudelligent-sandbox.com"
+}
+
+variable "frontend_subdomain" {
+  description = "Subdomain label used for the Foodie WE CloudFront alias."
+  type        = string
+  default     = "foodie-we"
+}

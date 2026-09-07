@@ -58,6 +58,11 @@ output "cloudfront_domain_name" {
   value       = module.frontend.cloudfront_domain_name
 }
 
+output "frontend_custom_domain_name" {
+  description = "Custom Route 53 domain mapped to the CloudFront distribution."
+  value       = local.frontend_custom_domain_name
+}
+
 output "frontend_bucket_name" {
   description = "Name of the private S3 bucket that stores the built frontend."
   value       = module.frontend.frontend_bucket_name

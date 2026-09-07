@@ -41,7 +41,7 @@ locals {
       image     = "${var.ecr_repository_urls.order}:${var.bootstrap_image_tag}"
       task_role = var.order_task_role_arn
       env = {
-        PORT                  = "5003"
+        PORT                   = "5003"
         ORDERS_TABLE_NAME      = var.orders_table_name
         MENU_SERVICE_URL       = "http://menu:5002"
         INTERNAL_SERVICE_TOKEN = var.internal_service_token

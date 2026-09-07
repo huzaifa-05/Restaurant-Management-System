@@ -1,10 +1,11 @@
 data "aws_caller_identity" "current" {}
 
 locals {
-  name_prefix          = "${var.project_name}-${var.environment}"
-  frontend_bucket_name = "${local.name_prefix}-frontend-${data.aws_caller_identity.current.account_id}"
-  artifact_bucket_name = "${local.name_prefix}-pipeline-artifacts-${data.aws_caller_identity.current.account_id}"
-  payment_lambda_name  = "${local.name_prefix}-payment"
+  name_prefix                 = "${var.project_name}-${var.environment}"
+  frontend_bucket_name        = "${local.name_prefix}-frontend-${data.aws_caller_identity.current.account_id}"
+  artifact_bucket_name        = "${local.name_prefix}-pipeline-artifacts-${data.aws_caller_identity.current.account_id}"
+  payment_lambda_name         = "${local.name_prefix}-payment"
+  frontend_custom_domain_name = "${var.frontend_subdomain}.${var.route53_zone_name}"
 
   common_tags = {
     Project     = "Foodie-WE"
@@ -15,6 +16,43 @@ locals {
 
   computed_frontend_bucket_arn = "arn:aws:s3:::${local.frontend_bucket_name}"
   computed_artifact_bucket_arn = "arn:aws:s3:::${local.artifact_bucket_name}"
+}
+
+data "aws_route53_zone" "public" {
+  name         = "${var.route53_zone_name}."
+  private_zone = false
+}
+
+resource "aws_acm_certificate" "frontend" {
+  provider          = aws.us_east_1
+  domain_name       = local.frontend_custom_domain_name
+  validation_method = "DNS"
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-frontend-cert"
+  })
+}
+
+resource "aws_route53_record" "frontend_certificate_validation" {
+  for_each = {
+    for dvo in aws_acm_certificate.frontend.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+
+  zone_id = data.aws_route53_zone.public.zone_id
+  name    = each.value.name
+  type    = each.value.type
+  ttl     = 60
+  records = [each.value.record]
+}
+
+resource "aws_acm_certificate_validation" "frontend" {
+  provider                = aws.us_east_1
+  certificate_arn         = aws_acm_certificate.frontend.arn
+  validation_record_fqdns = [for record in aws_route53_record.frontend_certificate_validation : record.fqdn]
 }
 
 resource "aws_codestarconnections_connection" "restaurant" {
@@ -121,7 +159,21 @@ module "frontend" {
   name_prefix             = local.name_prefix
   frontend_bucket_name    = local.frontend_bucket_name
   api_gateway_domain_name = module.api_gateway.api_gateway_domain_name
+  custom_domain_name      = local.frontend_custom_domain_name
+  acm_certificate_arn     = aws_acm_certificate_validation.frontend.certificate_arn
   tags                    = local.common_tags
+}
+
+resource "aws_route53_record" "frontend_alias" {
+  zone_id = data.aws_route53_zone.public.zone_id
+  name    = local.frontend_custom_domain_name
+  type    = "A"
+
+  alias {
+    name                   = module.frontend.cloudfront_domain_name
+    zone_id                = module.frontend.cloudfront_hosted_zone_id
+    evaluate_target_health = false
+  }
 }
 
 module "monitoring" {

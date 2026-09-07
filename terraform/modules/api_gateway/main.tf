@@ -46,20 +46,20 @@ resource "aws_apigatewayv2_integration" "payment" {
 
 locals {
   ecs_routes = {
-    "ANY /api/users" = true
-    "ANY /api/users/{proxy+}" = true
-    "ANY /api/menu" = false
-    "GET /api/menu/{proxy+}" = false
-    "GET /api/menu/items" = false
-    "GET /api/menu/items/{proxy+}" = false
-    "GET /api/menu/category/{proxy+}" = false
-    "ANY /api/orders" = true
-    "ANY /api/orders/{proxy+}" = true
+    "ANY /api/users"                    = true
+    "ANY /api/users/{proxy+}"           = true
+    "ANY /api/menu"                     = false
+    "GET /api/menu/{proxy+}"            = false
+    "GET /api/menu/items"               = false
+    "GET /api/menu/items/{proxy+}"      = false
+    "GET /api/menu/category/{proxy+}"   = false
+    "ANY /api/orders"                   = true
+    "ANY /api/orders/{proxy+}"          = true
     "ANY /api/orders/internal/{proxy+}" = false
-    "POST /api/menu/items" = true
-    "PUT /api/menu/items/{proxy+}" = true
-    "DELETE /api/menu/items/{proxy+}" = true
-    "PATCH /api/menu/items/{proxy+}" = true
+    "POST /api/menu/items"              = true
+    "PUT /api/menu/items/{proxy+}"      = true
+    "DELETE /api/menu/items/{proxy+}"   = true
+    "PATCH /api/menu/items/{proxy+}"    = true
   }
 
   protected_payment_routes = [
