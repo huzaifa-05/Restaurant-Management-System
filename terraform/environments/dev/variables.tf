@@ -97,11 +97,11 @@ variable "github_connection_name" {
 variable "github_full_repository_id" {
   description = "GitHub repository identifier in owner/repository format for CI/CD source actions."
   type        = string
-  default     = "awabamjad1/internship-program-2026"
+  default     = "huzaifa-05/Restaurant-Management-System"
 }
 
 variable "github_branch" {
   description = "Git branch watched by CI/CD pipelines."
   type        = string
-  default     = "Restaurant-Management-System"
+  default     = "main"
 }

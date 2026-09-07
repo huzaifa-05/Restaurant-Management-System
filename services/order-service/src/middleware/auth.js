@@ -9,13 +9,33 @@ function parseGroups(value) {
     .filter(Boolean);
 }
 
+function decodeJwtPayload(authorizationHeader) {
+  if (!authorizationHeader) return {};
+
+  const [scheme, token] = String(authorizationHeader).split(" ");
+  if (scheme?.toLowerCase() !== "bearer" || !token) return {};
+
+  const parts = token.split(".");
+  if (parts.length < 2) return {};
+
+  const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+  const padded = payload.padEnd(Math.ceil(payload.length / 4) * 4, "=");
+
+  try {
+    return JSON.parse(Buffer.from(padded, "base64").toString("utf8"));
+  } catch {
+    return {};
+  }
+}
+
 function resolveGatewayUser(req) {
-  const userId = req.headers["x-user-id"];
+  const claims = decodeJwtPayload(req.headers.authorization);
+  const userId = req.headers["x-user-id"] || claims.sub;
   if (!userId) return null;
-  const groups = parseGroups(req.headers["x-user-groups"]);
+  const groups = parseGroups(req.headers["x-user-groups"] || claims["cognito:groups"]);
   return {
     id: userId,
-    email: req.headers["x-user-email"] || "",
+    email: req.headers["x-user-email"] || claims.email || "",
     groups,
     role: groups.includes("Admins") || groups.includes("ADMIN") ? "ADMIN" : "USER"
   };

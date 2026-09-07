@@ -32,9 +32,8 @@ resource "aws_apigatewayv2_integration" "ecs" {
   connection_id      = aws_apigatewayv2_vpc_link.private_alb.id
 
   request_parameters = {
-    "overwrite:header.x-user-id"     = "$context.authorizer.jwt.claims.sub"
-    "overwrite:header.x-user-groups" = "$context.authorizer.jwt.claims.cognito:groups"
-    "overwrite:header.x-user-email"  = "$context.authorizer.jwt.claims.email"
+    "overwrite:header.x-user-id"    = "$context.authorizer.jwt.claims.sub"
+    "overwrite:header.x-user-email" = "$context.authorizer.jwt.claims.email"
   }
 }
 

@@ -18,7 +18,7 @@ bootstrap_image_tag = "v1"
 
 # GitHub / CI-CD
 github_connection_name    = "restaurant-connection"
-github_full_repository_id = "Huzaifa-05/Restaurant-Management-System
+github_full_repository_id = "huzaifa-05/Restaurant-Management-System"
 github_branch             = "main"
 
 # Payment / Lambda
