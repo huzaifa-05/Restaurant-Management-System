@@ -17,6 +17,12 @@ locals {
   computed_artifact_bucket_arn = "arn:aws:s3:::${local.artifact_bucket_name}"
 }
 
+resource "aws_codestarconnections_connection" "restaurant" {
+  name          = var.github_connection_name
+  provider_type = "GitHub"
+  tags          = local.common_tags
+}
+
 module "networking" {
   source                = "../../modules/networking"
   name_prefix           = local.name_prefix
@@ -79,7 +85,7 @@ module "iam" {
   payment_lambda_name         = local.payment_lambda_name
   ecr_repository_arns         = values(module.ecr.repository_arns)
   artifact_bucket_arn         = local.computed_artifact_bucket_arn
-  codeconnection_arn          = var.github_connection_arn
+  codeconnection_arn          = aws_codestarconnections_connection.restaurant.arn
 }
 
 module "lambda" {
@@ -159,7 +165,7 @@ module "cicd" {
   source = "../../modules/cicd"
 
   name_prefix                  = local.name_prefix
-  github_connection_arn        = var.github_connection_arn
+  github_connection_arn        = aws_codestarconnections_connection.restaurant.arn
   github_full_repository_id    = var.github_full_repository_id
   github_branch                = var.github_branch
   codepipeline_role_arn        = module.iam.codepipeline_role_arn

@@ -13,19 +13,9 @@ output "terraform_pipeline_name" {
   value       = aws_codepipeline.terraform.name
 }
 
-output "frontend_pipeline_name" {
-  description = "Name of the frontend deployment CodePipeline."
-  value       = aws_codepipeline.frontend.name
-}
-
-output "backend_ecs_pipeline_name" {
-  description = "Name of the backend ECS deployment CodePipeline."
-  value       = aws_codepipeline.backend_ecs.name
-}
-
-output "payment_lambda_pipeline_name" {
-  description = "Name of the Payment Lambda deployment CodePipeline."
-  value       = aws_codepipeline.payment_lambda.name
+output "application_pipeline_name" {
+  description = "Name of the single application CodePipeline for frontend, ECS services, and Payment Lambda."
+  value       = aws_codepipeline.application.name
 }
 
 output "codebuild_project_arns" {

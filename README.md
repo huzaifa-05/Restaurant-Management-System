@@ -247,11 +247,11 @@ The cart is persisted in browser local storage for now. Backend repositories are
 - Payment production traffic will be `CloudFront -> API Gateway -> Payment Lambda`. Payment does not run on ECS. The local Express server is kept for development, while `services/payment-service/handler.js` exposes a Lambda-compatible API Gateway HTTP API handler that reuses the same payment service and repository layer.
 - Application Load Balancer health checks can target `/health` on each service.
 - Amazon CloudWatch Logs can ingest the existing structured JSON logs.
-- AWS CodePipeline uses GitHub CodeConnections V2 trigger file-path filters. The backend ECS pipeline receives a full Git clone with `CODEBUILD_CLONE_REF`, detects changes under `services/user-service/**`, `services/menu-service/**`, and `services/order-service/**`, builds only changed images, pushes immutable Git SHA tags to ECR, registers new task definition revisions, and updates only the matching ECS services.
-- A separate frontend pipeline sets `VITE_API_BASE_URL` to the CloudFront domain, builds `frontend`, syncs `dist/` to S3, and invalidates the CloudFront distribution.
-- A separate payment pipeline packages `services/payment-service` as a ZIP and updates the Payment Lambda. It does not build a payment Docker image.
+- AWS CodePipeline uses GitHub CodeConnections V2 trigger file-path filters. A single application pipeline receives a full Git clone with `CODEBUILD_CLONE_REF`, detects changes under `frontend/**` and `services/**`, and fans out to CodeBuild actions for frontend, ECS services, and Payment Lambda. The backend ECS build still detects which of `user`, `menu`, and `order` changed and only updates the matching ECS services.
+- The frontend build sets `VITE_API_BASE_URL` to the CloudFront domain, builds `frontend`, syncs `dist/` to S3, and invalidates the CloudFront distribution when frontend files changed.
+- The payment build packages `services/payment-service` as a ZIP and updates the Payment Lambda when payment files changed. It does not build a payment Docker image.
 - The Terraform pipeline runs validate, plan, manual approval, and apply stages. Terraform apply is not run automatically by local development commands.
-- The final CI/CD categories are Terraform, frontend, backend ECS, and Payment Lambda only.
+- The final CI/CD categories are Terraform and a single application pipeline.
 
 ## Terraform
 

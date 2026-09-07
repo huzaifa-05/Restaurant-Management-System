@@ -88,10 +88,10 @@ variable "payment_success_rate" {
   default     = "0.9"
 }
 
-variable "github_connection_arn" {
-  description = "ARN of the CodeStar Connections or CodeConnections connection used by CI/CD."
+variable "github_connection_name" {
+  description = "Name of the CodeConnections connection used by CI/CD."
   type        = string
-  default     = "arn:aws:codeconnections:us-west-2:395063533284:connection/a69b0212-a1c5-4916-bf71-0df4812ccc96"
+  default     = "restaurant-connection"
 }
 
 variable "github_full_repository_id" {

@@ -280,63 +280,8 @@ resource "aws_codepipeline" "terraform" {
   }
 }
 
-resource "aws_codepipeline" "frontend" {
-  name          = "${var.name_prefix}-frontend"
-  role_arn      = var.codepipeline_role_arn
-  pipeline_type = "V2"
-  tags          = var.tags
-
-  trigger {
-    provider_type = "CodeStarSourceConnection"
-    git_configuration {
-      source_action_name = "Source"
-
-      push {
-        branches {
-          includes = [var.github_branch]
-        }
-
-        file_paths {
-          includes = ["frontend/**"]
-        }
-      }
-    }
-  }
-
-  artifact_store {
-    location = aws_s3_bucket.artifacts.bucket
-    type     = "S3"
-  }
-
-  stage {
-    name = "Source"
-    action {
-      name             = "Source"
-      category         = "Source"
-      owner            = local.source_action.owner
-      provider         = local.source_action.provider
-      version          = local.source_action.version
-      output_artifacts = local.source_action.output_artifacts
-      configuration    = local.source_action.configuration
-    }
-  }
-
-  stage {
-    name = "BuildDeploy"
-    action {
-      name            = "BuildDeployFrontend"
-      category        = "Build"
-      owner           = "AWS"
-      provider        = "CodeBuild"
-      version         = "1"
-      input_artifacts = ["SourceOutput"]
-      configuration   = { ProjectName = aws_codebuild_project.frontend.name }
-    }
-  }
-}
-
-resource "aws_codepipeline" "backend_ecs" {
-  name          = "${var.name_prefix}-backend-ecs"
+resource "aws_codepipeline" "application" {
+  name          = "${var.name_prefix}-application"
   role_arn      = var.codepipeline_role_arn
   pipeline_type = "V2"
   tags          = var.tags
@@ -353,9 +298,11 @@ resource "aws_codepipeline" "backend_ecs" {
 
         file_paths {
           includes = [
+            "frontend/**",
             "services/user-service/**",
             "services/menu-service/**",
-            "services/order-service/**"
+            "services/order-service/**",
+            "services/payment-service/**"
           ]
         }
       }
@@ -381,7 +328,19 @@ resource "aws_codepipeline" "backend_ecs" {
   }
 
   stage {
-    name = "BuildDeploy"
+    name = "BuildDeployFrontend"
+    action {
+      name            = "BuildDeployFrontend"
+      category        = "Build"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      version         = "1"
+      input_artifacts = ["SourceOutput"]
+      configuration   = { ProjectName = aws_codebuild_project.frontend.name }
+    }
+  }
+  stage {
+    name = "BuildDeployBackendECS"
     action {
       name            = "BuildDeployChangedServices"
       category        = "Build"
@@ -392,51 +351,8 @@ resource "aws_codepipeline" "backend_ecs" {
       configuration   = { ProjectName = aws_codebuild_project.backend_ecs.name }
     }
   }
-}
-
-resource "aws_codepipeline" "payment_lambda" {
-  name          = "${var.name_prefix}-payment-lambda"
-  role_arn      = var.codepipeline_role_arn
-  pipeline_type = "V2"
-  tags          = var.tags
-
-  trigger {
-    provider_type = "CodeStarSourceConnection"
-    git_configuration {
-      source_action_name = "Source"
-
-      push {
-        branches {
-          includes = [var.github_branch]
-        }
-
-        file_paths {
-          includes = ["services/payment-service/**"]
-        }
-      }
-    }
-  }
-
-  artifact_store {
-    location = aws_s3_bucket.artifacts.bucket
-    type     = "S3"
-  }
-
   stage {
-    name = "Source"
-    action {
-      name             = "Source"
-      category         = "Source"
-      owner            = local.source_action.owner
-      provider         = local.source_action.provider
-      version          = local.source_action.version
-      output_artifacts = local.source_action.output_artifacts
-      configuration    = local.source_action.configuration
-    }
-  }
-
-  stage {
-    name = "BuildDeploy"
+    name = "BuildDeployPaymentLambda"
     action {
       name            = "BuildDeployPaymentLambda"
       category        = "Build"

@@ -17,9 +17,9 @@ ecs_memory          = 512
 bootstrap_image_tag = "v1"
 
 # GitHub / CI-CD
-github_connection_arn     = "arn:aws:codeconnections:us-west-2:395063533284:connection/a69b0212-a1c5-4916-bf71-0df4812ccc96"
-github_full_repository_id = "awabamjad1/internship-program-2026"
-github_branch             = "Restaurant-Management-System"
+github_connection_name    = "restaurant-connection"
+github_full_repository_id = "Huzaifa-05/Restaurant-Management-System
+github_branch             = "main"
 
 # Payment / Lambda
 payment_success_rate   = "0.9"
