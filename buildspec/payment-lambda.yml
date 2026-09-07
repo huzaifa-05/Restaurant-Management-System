@@ -3,16 +3,17 @@ version: 0.2
 phases:
   pre_build:
     commands:
+      - ROOT_DIR="${CODEBUILD_SRC_DIR:-$PWD}"
       - |
-        if [ ! -d .git ]; then
+        if [ ! -d "$ROOT_DIR/.git" ]; then
           echo "Payment Lambda builds require CodePipeline SourceOutput to use CODEBUILD_CLONE_REF so CodeBuild receives a full Git clone."
           exit 1
         fi
       - |
-        if git rev-parse HEAD^ >/dev/null 2>&1; then
-          CHANGED_FILES="$(git diff --name-only HEAD^ HEAD)"
+        if git -C "$ROOT_DIR" rev-parse HEAD^ >/dev/null 2>&1; then
+          CHANGED_FILES="$(git -C "$ROOT_DIR" diff --name-only HEAD^ HEAD)"
         else
-          CHANGED_FILES="$(git show --pretty="" --name-only HEAD)"
+          CHANGED_FILES="$(git -C "$ROOT_DIR" show --pretty="" --name-only HEAD)"
         fi
       - |
         if ! echo "$CHANGED_FILES" | grep -q '^services/payment-service/'; then
