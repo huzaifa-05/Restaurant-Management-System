@@ -19,7 +19,7 @@ async function getAuthConfig() {
   if (configuredAuth.userPoolId && configuredAuth.clientId) return configuredAuth;
 
   if (!authConfigPromise) {
-    authConfigPromise = fetch(`${API_URLS.user}/auth-config`)
+    authConfigPromise = fetch(`${API_URLS.user}/auth-config`, { cache: "no-store" })
       .then(async (response) => {
         const body = await response.json().catch(() => ({}));
         if (!response.ok || !body.success || !body.data?.userPoolId || !body.data?.clientId) {

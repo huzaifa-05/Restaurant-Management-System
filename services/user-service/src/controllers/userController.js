@@ -6,6 +6,7 @@ const service = new UserService();
 
 async function getAuthConfig(_req, res, next) {
   try {
+    res.set("Cache-Control", "no-store");
     success(res, service.getAuthConfig());
   } catch (err) {
     next(err);
