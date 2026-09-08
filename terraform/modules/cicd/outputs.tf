@@ -8,11 +8,6 @@ output "artifact_bucket_arn" {
   value       = aws_s3_bucket.artifacts.arn
 }
 
-output "terraform_pipeline_name" {
-  description = "Name of the Terraform infrastructure CodePipeline."
-  value       = aws_codepipeline.terraform.name
-}
-
 output "application_pipeline_name" {
   description = "Name of the single application CodePipeline for frontend, ECS services, and Payment Lambda."
   value       = aws_codepipeline.application.name
