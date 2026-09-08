@@ -6,6 +6,11 @@ locals {
   artifact_bucket_name        = "${local.name_prefix}-pipeline-artifacts-${data.aws_caller_identity.current.account_id}"
   payment_lambda_name         = "${local.name_prefix}-payment"
   frontend_custom_domain_name = "${var.frontend_subdomain}.${var.route53_zone_name}"
+  frontend_origins = [
+    "http://localhost:5173",
+    "https://${local.frontend_custom_domain_name}",
+    "https://${module.frontend.cloudfront_domain_name}"
+  ]
 
   common_tags = {
     Project     = "Foodie-WE"
@@ -207,6 +212,7 @@ module "ecs" {
   cognito_user_pool_id        = module.cognito.user_pool_id
   cognito_user_pool_client_id = module.cognito.user_pool_client_id
   internal_service_token      = var.service_internal_token
+  frontend_origins            = local.frontend_origins
   desired_count               = var.desired_count
   cpu                         = var.ecs_cpu
   memory                      = var.ecs_memory

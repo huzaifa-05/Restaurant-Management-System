@@ -83,6 +83,11 @@ variable "internal_service_token" {
   type        = string
 }
 
+variable "frontend_origins" {
+  description = "Allowed frontend origins for backend CORS configuration."
+  type        = list(string)
+}
+
 variable "desired_count" {
   description = "Desired number of tasks for each ECS service."
   type        = number

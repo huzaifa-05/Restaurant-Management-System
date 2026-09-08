@@ -148,10 +148,6 @@ resource "aws_codebuild_project" "frontend" {
       name  = "CLOUDFRONT_DISTRIBUTION_ID"
       value = var.cloudfront_distribution_id
     }
-    environment_variable {
-      name  = "VITE_API_BASE_URL"
-      value = "https://${var.cloudfront_domain_name}"
-    }
   }
 
   logs_config {

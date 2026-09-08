@@ -1,9 +1,16 @@
 require("dotenv").config();
 
+function parseOrigins(value) {
+  return String(value || "http://localhost:5173")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+}
+
 const config = {
   port: Number(process.env.PORT || 5001),
   env: process.env.NODE_ENV || "development",
-  frontendOrigin: process.env.FRONTEND_ORIGIN || "http://localhost:5173",
+  frontendOrigin: parseOrigins(process.env.FRONTEND_ORIGIN),
   mockCognitoSub: process.env.MOCK_COGNITO_SUB || "mock-cognito-sub-123",
   mockUserRole: String(process.env.MOCK_USER_ROLE || "USER").toUpperCase()
 };

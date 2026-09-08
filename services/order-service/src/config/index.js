@@ -1,9 +1,16 @@
 require("dotenv").config();
 
+function parseOrigins(value) {
+  return String(value || "http://localhost:5173")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+}
+
 const config = {
   port: Number(process.env.PORT || 5003),
   env: process.env.NODE_ENV || "development",
-  frontendOrigin: process.env.FRONTEND_ORIGIN || "http://localhost:5173",
+  frontendOrigin: parseOrigins(process.env.FRONTEND_ORIGIN),
   menuServiceUrl: process.env.MENU_SERVICE_URL || "http://localhost:5002",
   internalServiceToken: process.env.INTERNAL_SERVICE_TOKEN || ""
 };

@@ -4,8 +4,14 @@ function trimTrailingSlash(value) {
 
 const apiBaseUrl = trimTrailingSlash(import.meta.env.VITE_API_BASE_URL || "");
 
+function isLocalDevelopmentHost() {
+  if (typeof window === "undefined") return false;
+  return ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+}
+
 function serviceUrl(envUrl, localOrigin, apiPath) {
   if (apiBaseUrl) return `${apiBaseUrl}${apiPath}`;
+  if (!isLocalDevelopmentHost()) return apiPath;
   return `${trimTrailingSlash(envUrl || localOrigin)}${apiPath}`;
 }
 

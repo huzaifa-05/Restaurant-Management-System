@@ -21,6 +21,7 @@ locals {
         USERS_TABLE_NAME      = var.users_table_name
         COGNITO_USER_POOL_ID  = var.cognito_user_pool_id
         COGNITO_APP_CLIENT_ID = var.cognito_user_pool_client_id
+        FRONTEND_ORIGIN       = join(",", var.frontend_origins)
         NODE_ENV              = "production"
       }
     }
@@ -32,6 +33,7 @@ locals {
       env = {
         PORT            = "5002"
         MENU_TABLE_NAME = var.menu_table_name
+        FRONTEND_ORIGIN = join(",", var.frontend_origins)
         NODE_ENV        = "production"
       }
     }
@@ -47,6 +49,7 @@ locals {
         INTERNAL_SERVICE_TOKEN = var.internal_service_token
         COGNITO_USER_POOL_ID   = var.cognito_user_pool_id
         COGNITO_APP_CLIENT_ID  = var.cognito_user_pool_client_id
+        FRONTEND_ORIGIN        = join(",", var.frontend_origins)
         NODE_ENV               = "production"
       }
     }
