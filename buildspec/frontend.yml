@@ -3,23 +3,7 @@ version: 0.2
 phases:
   pre_build:
     commands:
-      - 'ROOT_DIR="${CODEBUILD_SRC_DIR:-$PWD}"'
-      - |
-        if [ ! -d "$ROOT_DIR/.git" ]; then
-          echo "Frontend builds require CodePipeline SourceOutput to use CODEBUILD_CLONE_REF so CodeBuild receives a full Git clone."
-          exit 1
-        fi
-      - |
-        if git -C "$ROOT_DIR" rev-parse HEAD^ >/dev/null 2>&1; then
-          CHANGED_FILES="$(git -C "$ROOT_DIR" diff --name-only HEAD^ HEAD)"
-        else
-          CHANGED_FILES="$(git -C "$ROOT_DIR" show --pretty="" --name-only HEAD)"
-        fi
-      - |
-        if ! echo "$CHANGED_FILES" | grep -q '^frontend/'; then
-          echo "No frontend changes detected."
-          exit 0
-        fi
+      - echo "Deploying the frontend for this application pipeline execution."
   install:
     runtime-versions:
       nodejs: 20

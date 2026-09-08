@@ -13,13 +13,7 @@ phases:
           exit 1
         fi
       - COMMIT_SHA="$(git -C "$ROOT_DIR" rev-parse HEAD)"
-      - |
-        if git -C "$ROOT_DIR" rev-parse HEAD^ >/dev/null 2>&1; then
-          CHANGED_FILES="$(git -C "$ROOT_DIR" diff --name-only HEAD^ HEAD)"
-        else
-          CHANGED_FILES="$(git -C "$ROOT_DIR" show --pretty="" --name-only HEAD)"
-        fi
-      - echo "$CHANGED_FILES"
+      - echo "Evaluating ECS services against deployed image revision $COMMIT_SHA"
   build:
     commands:
       - |
@@ -38,18 +32,42 @@ phases:
           jq --arg IMAGE "$repository_url:$COMMIT_SHA" '.containerDefinitions[0].image = $IMAGE | del(.taskDefinitionArn,.revision,.status,.requiresAttributes,.compatibilities,.registeredAt,.registeredBy)' task-definition.json > new-task-definition.json
           new_task_definition_arn="$(aws ecs register-task-definition --cli-input-json file://new-task-definition.json --query 'taskDefinition.taskDefinitionArn' --output text)"
           aws ecs update-service --cluster "$ECS_CLUSTER_NAME" --service "$ecs_service_name" --task-definition "$new_task_definition_arn"
+          aws ecs wait services-stable --cluster "$ECS_CLUSTER_NAME" --services "$ecs_service_name"
         }
       - |
+        service_has_changes() {
+          local service_dir="$1"
+          local ecs_service_name="$2"
+          local task_definition_arn deployed_image deployed_revision
+
+          task_definition_arn="$(aws ecs describe-services --cluster "$ECS_CLUSTER_NAME" --services "$ecs_service_name" --query 'services[0].taskDefinition' --output text)"
+          deployed_image="$(aws ecs describe-task-definition --task-definition "$task_definition_arn" --query 'taskDefinition.containerDefinitions[0].image' --output text)"
+          deployed_revision="${deployed_image##*:}"
+
+          if ! git -C "$ROOT_DIR" cat-file -e "${deployed_revision}^{commit}" 2>/dev/null; then
+            echo "$ecs_service_name is using $deployed_image, not a source commit image. Deploying it."
+            return 0
+          fi
+
+          if git -C "$ROOT_DIR" diff --quiet "$deployed_revision" "$COMMIT_SHA" -- "$service_dir"; then
+            echo "No changes for $ecs_service_name since deployed revision $deployed_revision."
+            return 1
+          fi
+
+          echo "Changes found for $ecs_service_name since deployed revision $deployed_revision."
+          return 0
+        }
+
         deployed=0
-        if echo "$CHANGED_FILES" | grep -q '^services/user-service/'; then
+        if service_has_changes services/user-service "$USER_SERVICE_NAME"; then
           deploy_service user services/user-service "$USER_ECR_REPOSITORY_URL" "$USER_SERVICE_NAME"
           deployed=1
         fi
-        if echo "$CHANGED_FILES" | grep -q '^services/menu-service/'; then
+        if service_has_changes services/menu-service "$MENU_SERVICE_NAME"; then
           deploy_service menu services/menu-service "$MENU_ECR_REPOSITORY_URL" "$MENU_SERVICE_NAME"
           deployed=1
         fi
-        if echo "$CHANGED_FILES" | grep -q '^services/order-service/'; then
+        if service_has_changes services/order-service "$ORDER_SERVICE_NAME"; then
           deploy_service order services/order-service "$ORDER_ECR_REPOSITORY_URL" "$ORDER_SERVICE_NAME"
           deployed=1
         fi
