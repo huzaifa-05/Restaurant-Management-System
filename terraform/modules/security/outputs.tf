@@ -17,3 +17,8 @@ output "vpc_endpoint_security_group_id" {
   description = "ID of the security group attached to interface VPC endpoints."
   value       = aws_security_group.vpc_endpoints.id
 }
+
+output "payment_lambda_security_group_id" {
+  description = "ID of the security group attached to the Payment Lambda."
+  value       = aws_security_group.payment_lambda.id
+}

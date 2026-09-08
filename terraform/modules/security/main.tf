@@ -14,6 +14,13 @@ resource "aws_security_group" "api_gateway_vpc_link" {
   tags        = merge(var.tags, { Name = "${var.name_prefix}-api-gateway-vpc-link-sg" })
 }
 
+resource "aws_security_group" "payment_lambda" {
+  name        = "${var.name_prefix}-payment-lambda-sg"
+  description = "Payment Lambda access to internal services and VPC endpoints"
+  vpc_id      = var.vpc_id
+  tags        = merge(var.tags, { Name = "${var.name_prefix}-payment-lambda-sg" })
+}
+
 resource "aws_vpc_security_group_ingress_rule" "alb_http_from_api_gateway" {
   security_group_id            = aws_security_group.alb.id
   referenced_security_group_id = aws_security_group.api_gateway_vpc_link.id
@@ -21,6 +28,15 @@ resource "aws_vpc_security_group_ingress_rule" "alb_http_from_api_gateway" {
   to_port                      = 80
   ip_protocol                  = "tcp"
   description                  = "Allow API Gateway VPC Link to private ALB"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "alb_http_from_payment_lambda" {
+  security_group_id            = aws_security_group.alb.id
+  referenced_security_group_id = aws_security_group.payment_lambda.id
+  from_port                    = 80
+  to_port                      = 80
+  ip_protocol                  = "tcp"
+  description                  = "Allow Payment Lambda to call the Order Service through the private ALB"
 }
 
 resource "aws_vpc_security_group_egress_rule" "alb_to_ecs" {
@@ -64,6 +80,15 @@ resource "aws_vpc_security_group_ingress_rule" "vpc_endpoints_from_ecs" {
   description                  = "Allow ECS tasks to use VPC interface endpoints"
 }
 
+resource "aws_vpc_security_group_ingress_rule" "vpc_endpoints_from_payment_lambda" {
+  security_group_id            = aws_security_group.vpc_endpoints.id
+  referenced_security_group_id = aws_security_group.payment_lambda.id
+  from_port                    = 443
+  to_port                      = 443
+  ip_protocol                  = "tcp"
+  description                  = "Allow Payment Lambda to use VPC interface endpoints"
+}
+
 resource "aws_vpc_security_group_egress_rule" "vpc_endpoints_all" {
   security_group_id = aws_security_group.vpc_endpoints.id
   cidr_ipv4         = "0.0.0.0/0"
@@ -95,6 +120,13 @@ resource "aws_vpc_security_group_egress_rule" "ecs_all" {
   cidr_ipv4         = "0.0.0.0/0"
   ip_protocol       = "-1"
   description       = "Allow private tasks to reach AWS services through endpoints"
+}
+
+resource "aws_vpc_security_group_egress_rule" "payment_lambda_all" {
+  security_group_id = aws_security_group.payment_lambda.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1"
+  description       = "Allow Payment Lambda to reach internal services and AWS endpoints"
 }
 
 resource "aws_vpc_endpoint" "ecr_api" {

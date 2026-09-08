@@ -85,7 +85,7 @@ variable "lambda_timeout_seconds" {
 variable "payment_success_rate" {
   description = "Default simulated payment success rate passed to the Payment Lambda."
   type        = string
-  default     = "0.9"
+  default     = "1"
 }
 
 variable "github_connection_name" {

@@ -122,16 +122,21 @@ MENU_SERVICE_URL=http://localhost:5002
 MOCK_COGNITO_SUB=mock-cognito-sub-123
 MOCK_USER_ID=user-1
 MOCK_USER_ROLE=USER
-PAYMENT_SUCCESS_RATE=0.9
+PAYMENT_SUCCESS_RATE=1
 USERS_TABLE_NAME=UsersTable
 MENU_TABLE_NAME=MenuTable
 ORDERS_TABLE_NAME=OrdersTable
 PAYMENTS_TABLE_NAME=PaymentsTable
+DYNAMODB_ENDPOINT=
+ORDER_SERVICE_URL=http://localhost:5003
+INTERNAL_SERVICE_TOKEN=
 COGNITO_USER_POOL_ID=
 COGNITO_APP_CLIENT_ID=
 ```
 
 For local development, leave `VITE_API_BASE_URL` empty and use the four per-service URLs. For production behind one CloudFront domain, set `VITE_API_BASE_URL` to the CloudFront origin and the frontend API layer will call `/api/users`, `/api/menu`, `/api/orders`, and `/api/payments`. CloudFront forwards `/api/*` to API Gateway.
+
+The backend services now require AWS credentials and a DynamoDB endpoint. In AWS, ECS and Lambda receive credentials from their IAM roles. For local development, configure an AWS profile or DynamoDB Local and set the four table-name variables above before starting the services.
 
 ## Temporary Mock Authorization
 
@@ -226,14 +231,23 @@ All handled errors use:
 
 Admin routes are wrapped in `ProtectedAdminRoute` and only render when `currentUser.role === "ADMIN"`. Non-admin users are redirected to `/unauthorized`, and admin navigation links are hidden for normal users.
 
-The cart is persisted in browser local storage for now. Backend repositories are intentionally in-memory and accessed through repository classes so they can later be replaced without changing controllers or routes.
+The cart is persisted in browser local storage. Backend repositories persist user profiles, menu items, orders, and payments in their service-owned DynamoDB tables.
+
+The DynamoDB keys are designed around the API query paths:
+
+| Table | Primary key | Indexes | Used for |
+| --- | --- | --- | --- |
+| Users | `USER#<id>` / `PROFILE` | `GSI1`: `COGNITO#<sub>` / `USER#<id>` | profile lookup by user ID or Cognito subject |
+| Menu | `MENU` / `ITEM#<id>` | `GSI1`: `CATEGORY#<category>` / `ITEM#<id>` | item lookup, full menu, and category lists |
+| Orders | `ORDER#<id>` / `ORDER` | `GSI1`: customer orders by creation time; `GSI2`: all orders by creation time | checkout, customer history, and staff queue |
+| Payments | `PAYMENT#<id>` / `PAYMENT` | `GSI1`: payments for an order by creation time | payment status and refund lookup |
 
 ## AWS Production Deployment
 
 - Amazon Cognito issues the browser access token. CloudFront forwards API requests to API Gateway, and API Gateway's Cognito JWT authorizer validates the token before routing.
 - For ECS APIs, API Gateway forwards validated identity context to ECS through internal headers that it overwrites from authorizer claims. ECS services use that context for application authorization instead of independently validating Cognito JWT signatures.
 - Payment Lambda reads validated claims from the API Gateway authorizer context for protected payment routes. The webhook route remains public for future external payment provider callbacks.
-- Amazon DynamoDB will replace each in-memory repository with one table per service: `UsersTable`, `MenuTable`, `OrdersTable`, and `PaymentsTable`. The service layer already depends on repository methods, not storage details.
+- Amazon DynamoDB stores application data in one table per service: `UsersTable`, `MenuTable`, `OrdersTable`, and `PaymentsTable`. The Menu Service seeds the default burgers and other starter dishes only when its table is empty.
 - The VPC uses two Availability Zones because the internal Application Load Balancer must span two AZs.
 - AZ-A contains public subnet A, private subnet A, and the first internal ALB node; private ECS workloads stay in private subnet A.
 - AZ-B contains public subnet B and private subnet B for the second internal ALB node only.
@@ -283,4 +297,4 @@ terraform validate
 
 Do not run `terraform apply` unless you intend to deploy AWS resources.
 
-No AWS credentials, deployed cloud resources, DynamoDB client implementation, frontend Cognito login integration, or real payment provider integration are included in this MVP.
+No AWS credentials, deployed cloud resources, frontend Cognito login integration, or real payment provider integration are included in this MVP.

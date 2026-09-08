@@ -1,6 +1,21 @@
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const {
+  DynamoDBDocumentClient,
+  DeleteCommand,
+  GetCommand,
+  PutCommand,
+  QueryCommand,
+  UpdateCommand
+} = require("@aws-sdk/lib-dynamodb");
+const { config } = require("../config");
+
+const client = DynamoDBDocumentClient.from(new DynamoDBClient({ endpoint: config.dynamoDbEndpoint }), {
+  marshallOptions: { removeUndefinedValues: true }
+});
+
 const createdAt = new Date().toISOString();
 
-const items = [
+const seedItems = [
   {
     id: "burger-classic",
     name: "Classic Beef Burger",
@@ -179,41 +194,167 @@ const items = [
   }
 ];
 
-items.forEach((item) => {
+seedItems.forEach((item) => {
   if (!item.updatedAt) item.updatedAt = item.createdAt;
   if (!item.imageUrl) item.imageUrl = item.image;
 });
 
+function tableName() {
+  if (!config.menuTableName) throw new Error("MENU_TABLE_NAME is required");
+  return config.menuTableName;
+}
+
+function toMenuItem(item) {
+  if (!item) return null;
+  const { PK, SK, GSI1PK, GSI1SK, ...menuItem } = item;
+  return menuItem;
+}
+
+async function queryAll(request) {
+  const items = [];
+  let ExclusiveStartKey;
+  do {
+    const result = await client.send(new QueryCommand({ ...request, ExclusiveStartKey }));
+    items.push(...(result.Items || []));
+    ExclusiveStartKey = result.LastEvaluatedKey;
+  } while (ExclusiveStartKey);
+  return items;
+}
+
+function toDynamoItem(item) {
+  return {
+    ...item,
+    PK: "MENU",
+    SK: `ITEM#${item.id}`,
+    GSI1PK: `CATEGORY#${item.category}`,
+    GSI1SK: `ITEM#${item.id}`
+  };
+}
+
 class MenuRepository {
+  constructor() {
+    this.seedPromise = null;
+  }
+
+  async ensureSeeded() {
+    if (!this.seedPromise) {
+      this.seedPromise = this.seedIfTableIsEmpty().catch((err) => {
+        this.seedPromise = null;
+        throw err;
+      });
+    }
+    return this.seedPromise;
+  }
+
+  async seedIfTableIsEmpty() {
+    const existing = await queryAll({
+      TableName: tableName(),
+      KeyConditionExpression: "PK = :pk",
+      ExpressionAttributeValues: { ":pk": "MENU" },
+      ProjectionExpression: "PK"
+    });
+    if (existing.length) return;
+
+    await Promise.all(seedItems.map((item) => client.send(new PutCommand({
+      TableName: tableName(),
+      Item: toDynamoItem(item),
+      ConditionExpression: "attribute_not_exists(PK)"
+    })).catch((err) => {
+      if (err.name !== "ConditionalCheckFailedException") throw err;
+    })));
+  }
+
   async findAll() {
-    return [...items];
+    await this.ensureSeeded();
+    const items = await queryAll({
+      TableName: tableName(),
+      KeyConditionExpression: "PK = :pk",
+      ExpressionAttributeValues: { ":pk": "MENU" }
+    });
+    return items.map(toMenuItem);
   }
 
   async findById(id) {
-    return items.find((item) => item.id === id) || null;
+    await this.ensureSeeded();
+    const result = await client.send(new GetCommand({
+      TableName: tableName(),
+      Key: { PK: "MENU", SK: `ITEM#${id}` }
+    }));
+    return toMenuItem(result.Item);
   }
 
   async findByCategory(category) {
-    return items.filter((item) => item.category.toLowerCase() === category.toLowerCase());
+    await this.ensureSeeded();
+    const items = await queryAll({
+      TableName: tableName(),
+      IndexName: "GSI1",
+      KeyConditionExpression: "GSI1PK = :pk",
+      ExpressionAttributeValues: { ":pk": `CATEGORY#${category}` }
+    });
+    return items.map(toMenuItem);
   }
 
   async create(data) {
-    items.push(data);
-    return data;
+    const item = toDynamoItem(data);
+    await client.send(new PutCommand({
+      TableName: tableName(),
+      Item: item,
+      ConditionExpression: "attribute_not_exists(PK) AND attribute_not_exists(SK)"
+    }));
+    return toMenuItem(item);
   }
 
   async update(id, updates) {
-    const item = await this.findById(id);
-    if (!item) return null;
-    Object.assign(item, updates);
-    return item;
+    const fields = Object.entries(updates).filter(([field, value]) =>
+      value !== undefined && !["PK", "SK", "GSI1PK", "GSI1SK", "id"].includes(field)
+    );
+    if (!fields.length) return this.findById(id);
+
+    const names = {};
+    const values = {};
+    const assignments = fields.map(([field, value], index) => {
+      const name = `#field${index}`;
+      const valueName = `:value${index}`;
+      names[name] = field;
+      values[valueName] = value;
+      return `${name} = ${valueName}`;
+    });
+
+    if (updates.category !== undefined) {
+      names["#gsi1pk"] = "GSI1PK";
+      values[":gsi1pk"] = `CATEGORY#${updates.category}`;
+      assignments.push("#gsi1pk = :gsi1pk");
+    }
+
+    try {
+      const result = await client.send(new UpdateCommand({
+        TableName: tableName(),
+        Key: { PK: "MENU", SK: `ITEM#${id}` },
+        UpdateExpression: `SET ${assignments.join(", ")}`,
+        ConditionExpression: "attribute_exists(PK)",
+        ExpressionAttributeNames: names,
+        ExpressionAttributeValues: values,
+        ReturnValues: "ALL_NEW"
+      }));
+      return toMenuItem(result.Attributes);
+    } catch (err) {
+      if (err.name === "ConditionalCheckFailedException") return null;
+      throw err;
+    }
   }
 
   async delete(id) {
-    const index = items.findIndex((item) => item.id === id);
-    if (index === -1) return false;
-    items.splice(index, 1);
-    return true;
+    try {
+      await client.send(new DeleteCommand({
+        TableName: tableName(),
+        Key: { PK: "MENU", SK: `ITEM#${id}` },
+        ConditionExpression: "attribute_exists(PK)"
+      }));
+      return true;
+    } catch (err) {
+      if (err.name === "ConditionalCheckFailedException") return false;
+      throw err;
+    }
   }
 }
 

@@ -138,6 +138,10 @@ module "lambda" {
   payment_source_dir      = abspath("${path.root}/../../../services/payment-service")
   payment_lambda_role_arn = module.iam.payment_lambda_role_arn
   payments_table_name     = module.dynamodb.payments_table_name
+  order_service_url       = "http://${module.alb.alb_dns_name}"
+  internal_service_token  = var.service_internal_token
+  private_subnet_ids      = [module.networking.private_subnet_a_id, module.networking.private_subnet_b_id]
+  security_group_id       = module.security.payment_lambda_security_group_id
   payment_success_rate    = var.payment_success_rate
   log_retention_days      = var.log_retention_days
   lambda_timeout_seconds  = var.lambda_timeout_seconds

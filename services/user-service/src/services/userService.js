@@ -10,18 +10,42 @@ class UserService {
     return user;
   }
 
-  async getCurrentUser(identifier) {
-    const user = await repository.findCurrent(identifier);
-    if (!user) throw new AppError("Current user not found", 404);
-    return user;
+  async getCurrentUser(identity) {
+    const identifier = identity?.cognitoSub || identity?.id || identity;
+    let user = await repository.findCurrent(identifier);
+    if (user) return user;
+
+    const now = new Date().toISOString();
+    const profile = {
+      id: identity?.id || identifier,
+      cognitoSub: identity?.cognitoSub || identifier,
+      fullName: identity?.fullName || "Foodie WE Customer",
+      email: identity?.email || "",
+      phone: "",
+      role: identity?.role || "CUSTOMER",
+      createdAt: now,
+      updatedAt: now
+    };
+
+    try {
+      return await repository.create(profile);
+    } catch (err) {
+      if (err.name !== "ConditionalCheckFailedException") throw err;
+      user = await repository.findCurrent(identifier);
+      if (user) return user;
+      throw err;
+    }
   }
 
-  async updateCurrentUser(identifier, payload) {
+  async updateCurrentUser(identity, payload) {
+    const identifier = identity?.cognitoSub || identity?.id || identity;
     const updates = {};
     ["fullName", "email", "phone"].forEach((field) => {
       if (payload[field] !== undefined) updates[field] = payload[field];
     });
+    updates.updatedAt = new Date().toISOString();
 
+    await this.getCurrentUser(identity);
     const user = await repository.updateCurrent(identifier, updates);
     if (!user) throw new AppError("Current user not found", 404);
     return user;

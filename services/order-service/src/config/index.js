@@ -11,6 +11,8 @@ const config = {
   port: Number(process.env.PORT || 5003),
   env: process.env.NODE_ENV || "development",
   frontendOrigin: parseOrigins(process.env.FRONTEND_ORIGIN),
+  ordersTableName: process.env.ORDERS_TABLE_NAME,
+  dynamoDbEndpoint: process.env.DYNAMODB_ENDPOINT || undefined,
   menuServiceUrl: process.env.MENU_SERVICE_URL || "http://localhost:5002",
   internalServiceToken: process.env.INTERNAL_SERVICE_TOKEN || ""
 };

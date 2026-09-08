@@ -19,11 +19,18 @@ resource "aws_lambda_function" "payment" {
   source_code_hash = data.archive_file.payment.output_base64sha256
   timeout          = var.lambda_timeout_seconds
 
+  vpc_config {
+    subnet_ids         = var.private_subnet_ids
+    security_group_ids = [var.security_group_id]
+  }
+
   environment {
     variables = {
-      NODE_ENV             = "production"
-      PAYMENTS_TABLE_NAME  = var.payments_table_name
-      PAYMENT_SUCCESS_RATE = var.payment_success_rate
+      NODE_ENV               = "production"
+      PAYMENTS_TABLE_NAME    = var.payments_table_name
+      PAYMENT_SUCCESS_RATE   = var.payment_success_rate
+      ORDER_SERVICE_URL      = var.order_service_url
+      INTERNAL_SERVICE_TOKEN = var.internal_service_token
     }
   }
 

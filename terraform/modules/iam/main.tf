@@ -85,6 +85,11 @@ resource "aws_iam_role_policy" "payment_lambda" {
   })
 }
 
+resource "aws_iam_role_policy_attachment" "payment_lambda_vpc_access" {
+  role       = aws_iam_role.payment_lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+}
+
 resource "aws_iam_role" "codepipeline" {
   name               = "${var.name_prefix}-codepipeline"
   assume_role_policy = local.assume_role_policies.codepipeline

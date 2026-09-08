@@ -21,7 +21,7 @@ async function getUser(req, res, next) {
 
 async function getMe(req, res, next) {
   try {
-    success(res, await service.getCurrentUser(req.user.cognitoSub || req.user.id));
+    success(res, await service.getCurrentUser(req.user));
   } catch (err) {
     next(err);
   }
@@ -29,7 +29,7 @@ async function getMe(req, res, next) {
 
 async function updateMe(req, res, next) {
   try {
-    success(res, await service.updateCurrentUser(req.user.cognitoSub || req.user.id, req.body));
+    success(res, await service.updateCurrentUser(req.user, req.body));
   } catch (err) {
     next(err);
   }

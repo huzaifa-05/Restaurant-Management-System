@@ -41,6 +41,10 @@ output "order_task_role_name" {
 output "payment_lambda_role_arn" {
   description = "ARN of the IAM execution role used by the Payment Lambda."
   value       = aws_iam_role.payment_lambda.arn
+  depends_on = [
+    aws_iam_role_policy.payment_lambda,
+    aws_iam_role_policy_attachment.payment_lambda_vpc_access
+  ]
 }
 
 output "payment_lambda_role_name" {

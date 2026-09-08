@@ -18,6 +18,27 @@ variable "payments_table_name" {
   type        = string
 }
 
+variable "order_service_url" {
+  description = "Private Order Service base URL used by the Payment Lambda."
+  type        = string
+}
+
+variable "internal_service_token" {
+  description = "Shared token used by the Payment Lambda for Order Service internal endpoints."
+  type        = string
+  sensitive   = true
+}
+
+variable "private_subnet_ids" {
+  description = "Private subnet IDs attached to the Payment Lambda."
+  type        = list(string)
+}
+
+variable "security_group_id" {
+  description = "Security group ID attached to the Payment Lambda."
+  type        = string
+}
+
 variable "payment_success_rate" {
   description = "Default simulated payment success rate passed to the Payment Lambda."
   type        = string
