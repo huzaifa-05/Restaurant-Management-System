@@ -13,6 +13,8 @@ const config = {
   frontendOrigin: parseOrigins(process.env.FRONTEND_ORIGIN),
   usersTableName: process.env.USERS_TABLE_NAME,
   dynamoDbEndpoint: process.env.DYNAMODB_ENDPOINT || undefined,
+  cognitoUserPoolId: process.env.COGNITO_USER_POOL_ID,
+  cognitoAppClientId: process.env.COGNITO_APP_CLIENT_ID,
   mockCognitoSub: process.env.MOCK_COGNITO_SUB || "mock-cognito-sub-123",
   mockUserRole: String(process.env.MOCK_USER_ROLE || "USER").toUpperCase()
 };

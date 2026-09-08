@@ -54,9 +54,12 @@ export function AuthProvider({ children }) {
           role: (user.role || "CUSTOMER").toUpperCase()
         });
       },
-      signOut() {
-        if (usesCognitoAuth) signOutFromCognito();
-        setCurrentUser(null);
+      async signOut() {
+        try {
+          if (usesCognitoAuth) await signOutFromCognito();
+        } finally {
+          setCurrentUser(null);
+        }
       },
       hasRole(role) {
         return currentUser?.role === role;

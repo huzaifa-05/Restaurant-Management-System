@@ -4,18 +4,40 @@ import {
   CognitoUserAttribute,
   CognitoUserPool
 } from "amazon-cognito-identity-js";
+import { API_URLS } from "../api/config";
 
 const authMode = import.meta.env.VITE_AUTH_MODE || (import.meta.env.PROD ? "cognito" : "mock");
-const userPoolId = import.meta.env.VITE_COGNITO_USER_POOL_ID;
-const clientId = import.meta.env.VITE_COGNITO_CLIENT_ID;
+const configuredAuth = {
+  userPoolId: import.meta.env.VITE_COGNITO_USER_POOL_ID,
+  clientId: import.meta.env.VITE_COGNITO_CLIENT_ID
+};
+let authConfigPromise;
 
 export const usesCognitoAuth = authMode === "cognito";
 
-function getPool() {
-  if (!userPoolId || !clientId) {
-    throw new Error("Cognito authentication is not configured for this application.");
+async function getAuthConfig() {
+  if (configuredAuth.userPoolId && configuredAuth.clientId) return configuredAuth;
+
+  if (!authConfigPromise) {
+    authConfigPromise = fetch(`${API_URLS.user}/auth-config`)
+      .then(async (response) => {
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok || !body.success || !body.data?.userPoolId || !body.data?.clientId) {
+          throw new Error(body.message || "Cognito authentication is not configured for this application.");
+        }
+        return body.data;
+      })
+      .catch((error) => {
+        authConfigPromise = null;
+        throw error;
+      });
   }
-  return new CognitoUserPool({ UserPoolId: userPoolId, ClientId: clientId });
+  return authConfigPromise;
+}
+
+async function getPool() {
+  const authConfig = await getAuthConfig();
+  return new CognitoUserPool({ UserPoolId: authConfig.userPoolId, ClientId: authConfig.clientId });
 }
 
 function toUser(session) {
@@ -48,7 +70,8 @@ function getSessionForUser(user) {
 }
 
 export async function restoreCognitoSession() {
-  const user = getPool().getCurrentUser();
+  const pool = await getPool();
+  const user = pool.getCurrentUser();
   if (!user) return null;
   const session = await getSessionForUser(user);
   return { user: toUser(session), idToken: session.getIdToken().getJwtToken() };
@@ -59,9 +82,10 @@ export async function getCognitoAuthorizationHeader() {
   return session ? { Authorization: `Bearer ${session.idToken}` } : {};
 }
 
-export function signUpWithCognito(email, password) {
+export async function signUpWithCognito(email, password) {
+  const pool = await getPool();
   return new Promise((resolve, reject) => {
-    getPool().signUp(
+    pool.signUp(
       email.trim(),
       password,
       [new CognitoUserAttribute({ Name: "email", Value: email.trim() })],
@@ -71,16 +95,18 @@ export function signUpWithCognito(email, password) {
   });
 }
 
-export function confirmCognitoSignUp(email, code) {
+export async function confirmCognitoSignUp(email, code) {
+  const pool = await getPool();
   return new Promise((resolve, reject) => {
-    const user = new CognitoUser({ Username: email.trim(), Pool: getPool() });
+    const user = new CognitoUser({ Username: email.trim(), Pool: pool });
     user.confirmRegistration(code.trim(), true, (error, result) => (error ? reject(error) : resolve(result)));
   });
 }
 
-export function signInWithCognito(email, password) {
+export async function signInWithCognito(email, password) {
+  const pool = await getPool();
   return new Promise((resolve, reject) => {
-    const user = new CognitoUser({ Username: email.trim(), Pool: getPool() });
+    const user = new CognitoUser({ Username: email.trim(), Pool: pool });
     const details = new AuthenticationDetails({ Username: email.trim(), Password: password });
     user.authenticateUser(details, {
       onSuccess: (session) => resolve(toUser(session)),
@@ -90,6 +116,7 @@ export function signInWithCognito(email, password) {
   });
 }
 
-export function signOutFromCognito() {
-  getPool().getCurrentUser()?.signOut();
+export async function signOutFromCognito() {
+  const pool = await getPool();
+  pool.getCurrentUser()?.signOut();
 }

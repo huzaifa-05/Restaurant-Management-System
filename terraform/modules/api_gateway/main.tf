@@ -48,6 +48,7 @@ locals {
   ecs_routes = {
     "ANY /api/users"                    = true
     "ANY /api/users/{proxy+}"           = true
+    "GET /api/users/auth-config"        = false
     "ANY /api/menu"                     = false
     "GET /api/menu/{proxy+}"            = false
     "GET /api/menu/items"               = false

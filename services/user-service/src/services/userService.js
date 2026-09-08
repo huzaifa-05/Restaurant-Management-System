@@ -1,9 +1,20 @@
 const { UserRepository } = require("../repositories/userRepository");
+const { config } = require("../config");
 const { AppError } = require("../utils/AppError");
 
 const repository = new UserRepository();
 
 class UserService {
+  getAuthConfig() {
+    if (!config.cognitoUserPoolId || !config.cognitoAppClientId) {
+      throw new AppError("Cognito authentication is not configured", 503);
+    }
+    return {
+      userPoolId: config.cognitoUserPoolId,
+      clientId: config.cognitoAppClientId
+    };
+  }
+
   async getUserById(id) {
     const user = await repository.findById(id);
     if (!user) throw new AppError("User not found", 404);

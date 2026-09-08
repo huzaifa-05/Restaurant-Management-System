@@ -4,6 +4,14 @@ const { AppError } = require("../utils/AppError");
 
 const service = new UserService();
 
+async function getAuthConfig(_req, res, next) {
+  try {
+    success(res, service.getAuthConfig());
+  } catch (err) {
+    next(err);
+  }
+}
+
 function canAccessProfile(req, targetId) {
   return req.user.role === "ADMIN" || req.user.role === "STAFF" || req.user.id === targetId;
 }
@@ -35,4 +43,4 @@ async function updateMe(req, res, next) {
   }
 }
 
-module.exports = { getUser, getMe, updateMe };
+module.exports = { getAuthConfig, getUser, getMe, updateMe };
