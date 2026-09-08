@@ -240,6 +240,8 @@ module "cicd" {
   frontend_bucket_name         = module.frontend.frontend_bucket_name
   cloudfront_distribution_id   = module.frontend.cloudfront_distribution_id
   cloudfront_domain_name       = module.frontend.cloudfront_domain_name
+  cognito_user_pool_id         = module.cognito.user_pool_id
+  cognito_user_pool_client_id  = module.cognito.user_pool_client_id
   ecs_cluster_name             = module.ecs.ecs_cluster_name
   user_ecs_service_name        = module.ecs.user_ecs_service_name
   menu_ecs_service_name        = module.ecs.menu_ecs_service_name

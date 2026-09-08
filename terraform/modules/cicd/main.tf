@@ -148,6 +148,18 @@ resource "aws_codebuild_project" "frontend" {
       name  = "CLOUDFRONT_DISTRIBUTION_ID"
       value = var.cloudfront_distribution_id
     }
+    environment_variable {
+      name  = "VITE_AUTH_MODE"
+      value = "cognito"
+    }
+    environment_variable {
+      name  = "VITE_COGNITO_USER_POOL_ID"
+      value = var.cognito_user_pool_id
+    }
+    environment_variable {
+      name  = "VITE_COGNITO_CLIENT_ID"
+      value = var.cognito_user_pool_client_id
+    }
   }
 
   logs_config {

@@ -63,6 +63,16 @@ variable "cloudfront_domain_name" {
   type        = string
 }
 
+variable "cognito_user_pool_id" {
+  description = "Cognito user pool ID embedded in the frontend build."
+  type        = string
+}
+
+variable "cognito_user_pool_client_id" {
+  description = "Cognito app client ID embedded in the frontend build."
+  type        = string
+}
+
 variable "ecs_cluster_name" {
   description = "Name of the ECS cluster updated by the backend pipeline."
   type        = string
