@@ -17,6 +17,8 @@ phases:
   build:
     commands:
       - |
+        set -eu
+
         deploy_service() {
           local key="$1"
           local service_dir="$2"
@@ -34,7 +36,7 @@ phases:
           aws ecs update-service --cluster "$ECS_CLUSTER_NAME" --service "$ecs_service_name" --task-definition "$new_task_definition_arn"
           aws ecs wait services-stable --cluster "$ECS_CLUSTER_NAME" --services "$ecs_service_name"
         }
-      - |
+
         service_has_changes() {
           local service_dir="$1"
           local ecs_service_name="$2"
