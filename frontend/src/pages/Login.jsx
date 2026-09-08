@@ -2,6 +2,7 @@ import { useState } from "react";
 import { LogIn } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { mockGuestUser } from "../config/mockAuth";
+import { confirmCognitoSignUp, signUpWithCognito, usesCognitoAuth } from "../config/auth";
 import { useAuth } from "../context/AuthContext.jsx";
 
 function getNextPath(search) {
@@ -13,26 +14,52 @@ export function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const { signIn } = useAuth();
-  const [form, setForm] = useState({
-    fullName: "",
-    email: ""
-  });
+  const [form, setForm] = useState({ fullName: "", email: "", password: "", code: "" });
+  const [mode, setMode] = useState("sign-in");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   function updateField(event) {
     const { name, value } = event.target;
     setForm((current) => ({ ...current, [name]: value }));
   }
 
-  function submit(event) {
+  async function submit(event) {
     event.preventDefault();
+    setError("");
+    setSubmitting(true);
     const next = getNextPath(location.search);
-    signIn({
-      id: mockGuestUser.id,
-      fullName: form.fullName.trim() || "Foodie WE Customer",
-      email: form.email.trim() || "customer@foodie-we.local",
-      role: mockGuestUser.role
-    });
-    navigate(next, { replace: true });
+    try {
+      if (!usesCognitoAuth) {
+        await signIn({
+          id: mockGuestUser.id,
+          fullName: form.fullName.trim() || "Foodie WE Customer",
+          email: form.email.trim() || "customer@foodie-we.local",
+          role: mockGuestUser.role
+        });
+        navigate(next, { replace: true });
+        return;
+      }
+
+      if (mode === "sign-up") {
+        await signUpWithCognito(form.email, form.password);
+        setMode("confirm");
+        return;
+      }
+      if (mode === "confirm") {
+        await confirmCognitoSignUp(form.email, form.code);
+        await signIn({ email: form.email, password: form.password });
+        navigate(next, { replace: true });
+        return;
+      }
+
+      await signIn({ email: form.email, password: form.password });
+      navigate(next, { replace: true });
+    } catch (err) {
+      setError(err.message || "Authentication failed.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -44,20 +71,35 @@ export function Login() {
       <div className="state-box">
         <form className="checkout-form" onSubmit={submit}>
           <label>
-            Full name
-            <input name="fullName" value={form.fullName} onChange={updateField} placeholder="Your name" />
+            {usesCognitoAuth ? "Email" : "Full name"}
+            {usesCognitoAuth ? (
+              <input name="email" type="email" value={form.email} onChange={updateField} placeholder="you@example.com" required />
+            ) : (
+              <input name="fullName" value={form.fullName} onChange={updateField} placeholder="Your name" />
+            )}
           </label>
-          <label>
-            Email
-            <input name="email" type="email" value={form.email} onChange={updateField} placeholder="you@example.com" />
-          </label>
-          <p className="form-note">
-            You need to sign in before checkout. Menu browsing stays public.
-          </p>
-          <button className="primary-button full" type="submit">
+          {usesCognitoAuth && mode !== "confirm" && (
+            <label>
+              Password
+              <input name="password" type="password" value={form.password} onChange={updateField} minLength="8" required />
+            </label>
+          )}
+          {usesCognitoAuth && mode === "confirm" && (
+            <label>
+              Verification code
+              <input name="code" value={form.code} onChange={updateField} inputMode="numeric" required />
+            </label>
+          )}
+          {error && <p className="form-error">{error}</p>}
+          <button className="primary-button full" disabled={submitting} type="submit">
             <LogIn size={18} />
-            Continue to checkout
+            {submitting ? "Please wait" : mode === "sign-up" ? "Create account" : mode === "confirm" ? "Confirm account" : "Sign in"}
           </button>
+          {usesCognitoAuth && mode !== "confirm" && (
+            <button className="text-button" type="button" onClick={() => setMode(mode === "sign-in" ? "sign-up" : "sign-in")}>
+              {mode === "sign-in" ? "Create an account" : "I already have an account"}
+            </button>
+          )}
         </form>
       </div>
     </section>

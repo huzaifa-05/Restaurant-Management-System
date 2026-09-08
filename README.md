@@ -107,6 +107,9 @@ VITE_USER_API_URL=http://localhost:5001
 VITE_MENU_API_URL=http://localhost:5002
 VITE_ORDER_API_URL=http://localhost:5003
 VITE_PAYMENT_API_URL=http://localhost:5004
+VITE_AUTH_MODE=mock
+VITE_COGNITO_USER_POOL_ID=
+VITE_COGNITO_CLIENT_ID=
 VITE_MOCK_USER_ID=user-1
 VITE_MOCK_USER_NAME=Foodie WE Guest
 VITE_MOCK_USER_ROLE=USER
@@ -138,7 +141,7 @@ For local development, leave `VITE_API_BASE_URL` empty and use the four per-serv
 
 The backend services now require AWS credentials and a DynamoDB endpoint. In AWS, ECS and Lambda receive credentials from their IAM roles. For local development, configure an AWS profile or DynamoDB Local and set the four table-name variables above before starting the services.
 
-## Temporary Mock Authorization
+## Authorization
 
 The app currently supports two roles:
 
@@ -162,7 +165,7 @@ x-mock-user-role: USER or ADMIN
 
 Local backend authorization is enforced by reusable `requireAuth` and `requireAdmin` middleware in the protected services. For direct API testing, omit or set `x-mock-user-role: USER` to verify `403 Forbidden`, use `x-mock-user-role: ADMIN` to verify access, and set `x-mock-authenticated: false` to verify `401 Unauthorized`.
 
-This is intentionally temporary for local development. In AWS, API Gateway performs Cognito JWT validation before traffic reaches ECS. API Gateway overwrites internal identity headers such as `x-user-id`, `x-user-groups`, and `x-user-email` with validated authorizer claims before forwarding to the internal ALB. ECS services should use that trusted forwarded identity context for application authorization and must not trust browser-supplied identity headers directly.
+Local development uses mock identity headers when `VITE_AUTH_MODE=mock`. Production builds use Cognito: customers can create an account, confirm its email code, and sign in. The browser sends the Cognito ID token as a Bearer token, which API Gateway validates before forwarding trusted identity headers to ECS. ECS services must not trust browser-supplied identity headers directly.
 
 ## API Endpoints
 
@@ -297,4 +300,4 @@ terraform validate
 
 Do not run `terraform apply` unless you intend to deploy AWS resources.
 
-No AWS credentials, deployed cloud resources, frontend Cognito login integration, or real payment provider integration are included in this MVP.
+No AWS credentials, deployed cloud resources, or real payment provider integration are included in this MVP.
