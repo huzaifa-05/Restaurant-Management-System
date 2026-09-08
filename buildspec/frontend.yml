@@ -8,12 +8,13 @@ phases:
     runtime-versions:
       nodejs: 20
     commands:
-      - cd frontend
-      - npm ci
+      - npm --prefix frontend ci
   build:
     commands:
-      - npm run build
+      - npm --prefix frontend run build
   post_build:
     commands:
-      - aws s3 sync dist/ "s3://$FRONTEND_BUCKET_NAME" --delete
+      - test -n "$VITE_COGNITO_USER_POOL_ID"
+      - grep -R -F -q "$VITE_COGNITO_USER_POOL_ID" frontend/dist/assets
+      - aws s3 sync frontend/dist/ "s3://$FRONTEND_BUCKET_NAME" --delete
       - aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" --paths "/*"
